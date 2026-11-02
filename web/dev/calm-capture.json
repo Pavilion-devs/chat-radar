@@ -1,0 +1,876 @@
+[
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 3,
+        "examples": [
+          "What is the next game?",
+          "next game when?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "Play Minecraft next",
+        "kind": "request",
+        "urgency": 0.5,
+        "count_estimate": 2,
+        "examples": [
+          "Can we play Minecraft next?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:3"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 6,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.6
+    },
+    "ts": 1793637971590,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 11,
+    "sampledCount": 6
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 51,
+        "examples": [
+          "What is the next game?",
+          "next game when?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "Play Minecraft next",
+        "kind": "request",
+        "urgency": 0.6,
+        "count_estimate": 26,
+        "examples": [
+          "Can we play Minecraft next?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:3"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 78,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793637979649,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 251,
+    "sampledCount": 6
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 118,
+        "examples": [
+          "What is the next game?",
+          "next game when?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "Play Minecraft next",
+        "kind": "request",
+        "urgency": 0.5,
+        "count_estimate": 60,
+        "examples": [
+          "Can we play Minecraft next?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:3"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 179,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793637987361,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 491,
+    "sampledCount": 6
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 193,
+        "examples": [
+          "What is the next game?",
+          "next game when?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "Play Minecraft next",
+        "kind": "request",
+        "urgency": 0.5,
+        "count_estimate": 97,
+        "examples": [
+          "Can we play Minecraft next?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:3"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.1,
+        "count_estimate": 291,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793637995093,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 731,
+    "sampledCount": 6
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 257,
+        "examples": [
+          "What is the next game?",
+          "next game when?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "No audio, you're muted",
+        "kind": "complaint",
+        "urgency": 0.9,
+        "count_estimate": 185,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "Play Minecraft next",
+        "kind": "request",
+        "urgency": 0.3,
+        "count_estimate": 129,
+        "examples": [
+          "Can we play Minecraft next?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:3"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.1,
+        "count_estimate": 386,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "frustrated",
+      "score": -0.2
+    },
+    "ts": 1793638003893,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 1085,
+    "sampledCount": 14
+  },
+  {
+    "topics": [
+      {
+        "label": "No audio, muted",
+        "kind": "complaint",
+        "urgency": 0.9,
+        "count_estimate": 568,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 373,
+        "examples": [
+          "What is the next game?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.1,
+        "count_estimate": 424,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "frustrated",
+      "score": -0.3
+    },
+    "ts": 1793638011210,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 1724,
+    "sampledCount": 14
+  },
+  {
+    "topics": [
+      {
+        "label": "No audio, muted",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 947,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 419,
+        "examples": [
+          "What is the next game?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 1235,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638018896,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 3426,
+    "sampledCount": 21
+  },
+  {
+    "topics": [
+      {
+        "label": "No audio, muted",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 1099,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 453,
+        "examples": [
+          "What is the next game?",
+          "Can we play Minecraft next?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W stream",
+        "kind": "reaction",
+        "urgency": 0.1,
+        "count_estimate": 3176,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638027714,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 6145,
+    "sampledCount": 30
+  },
+  {
+    "topics": [
+      {
+        "label": "Can't hear you",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 1160,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 514,
+        "examples": [
+          "next game when?",
+          "What is the next game?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W stream, clip it",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 3982,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638037032,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 6275,
+    "sampledCount": 30
+  },
+  {
+    "topics": [
+      {
+        "label": "Can't hear you",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 1184,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 554,
+        "examples": [
+          "next game when?",
+          "What is the next game?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W stream, clip it",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 4302,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638043449,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 6296,
+    "sampledCount": 30
+  },
+  {
+    "topics": [
+      {
+        "label": "Can't hear you",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 1194,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.5,
+        "count_estimate": 582,
+        "examples": [
+          "next game when?",
+          "What is the next game?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W stream, clip it",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 4458,
+        "examples": [
+          "W streamer",
+          "PogChamp"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638052121,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 6362,
+    "sampledCount": 34
+  },
+  {
+    "topics": [
+      {
+        "label": "Can't hear you",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 1198,
+        "examples": [
+          "no audio",
+          "ur muted"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 575,
+        "examples": [
+          "next game when?",
+          "What is the next game?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W, clip that",
+        "kind": "reaction",
+        "urgency": 0.5,
+        "count_estimate": 5218,
+        "examples": [
+          "PogChamp",
+          "LMAO"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638061823,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 7496,
+    "sampledCount": 34
+  },
+  {
+    "topics": [
+      {
+        "label": "Can't hear you",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 896,
+        "examples": [
+          "cant hear u",
+          "sin audio"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 503,
+        "examples": [
+          "¿Cuál es el próximo juego?",
+          "Qual é o próximo jogo?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "W, clip that",
+        "kind": "reaction",
+        "urgency": 0.5,
+        "count_estimate": 6249,
+        "examples": [
+          "W",
+          "LMAOOO"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.7
+    },
+    "ts": 1793638067563,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 8085,
+    "sampledCount": 29
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 474,
+        "examples": [
+          "¿Cuál es el próximo juego?",
+          "Qual é o próximo jogo?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "Can't hear you",
+        "kind": "complaint",
+        "urgency": 0.8,
+        "count_estimate": 390,
+        "examples": [
+          "sin audio",
+          "we cannot hear your mic"
+        ],
+        "id": "topic:4"
+      },
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 6661,
+        "examples": [
+          "RAID RAID RAID",
+          "WELCOME RAIDERS"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638075922,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 7444,
+    "sampledCount": 29
+  },
+  {
+    "topics": [
+      {
+        "label": "Clip that play",
+        "kind": "request",
+        "urgency": 0.5,
+        "count_estimate": 1438,
+        "examples": [
+          "CLIP THAT",
+          "INSANE"
+        ],
+        "id": "topic:5"
+      },
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 463,
+        "examples": [
+          "¿Cuál es el próximo juego?",
+          "Qual é o próximo jogo?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 4208,
+        "examples": [
+          "RAID RAID RAID",
+          "WELCOME RAIDERS"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.9
+    },
+    "ts": 1793638083624,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 4465,
+    "sampledCount": 21
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 400,
+        "examples": [
+          "次は何のゲーム?",
+          "ما هي اللعبة القادمة؟"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 3216,
+        "examples": [
+          "RAID RAID RAID",
+          "WELCOME RAIDERS"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "welcoming",
+      "score": 0.7
+    },
+    "ts": 1793638091226,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 3216,
+    "sampledCount": 13
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 287,
+        "examples": [
+          "ما هي اللعبة القادمة؟",
+          "what game is next?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 2932,
+        "examples": [
+          "RAID RAID RAID",
+          "WELCOME RAIDERS"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638099643,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 2954,
+    "sampledCount": 13
+  },
+  {
+    "topics": [
+      {
+        "label": "What's the next game?",
+        "kind": "question",
+        "urgency": 0.4,
+        "count_estimate": 155,
+        "examples": [
+          "ما هي اللعبة القادمة؟",
+          "what game is next?"
+        ],
+        "id": "topic:2"
+      },
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 2692,
+        "examples": [
+          "RAID RAID RAID",
+          "WELCOME RAIDERS"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638107383,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 2692,
+    "sampledCount": 13
+  },
+  {
+    "topics": [
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.3,
+        "count_estimate": 1828,
+        "examples": [
+          "RAID RAID RAID",
+          "WELCOME RAIDERS"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "welcoming",
+      "score": 0.8
+    },
+    "ts": 1793638115257,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 1828,
+    "sampledCount": 4
+  },
+  {
+    "topics": [
+      {
+        "label": "RAID RAID RAID",
+        "kind": "reaction",
+        "urgency": 0.2,
+        "count_estimate": 458,
+        "examples": [
+          "hello from the raid",
+          "new here!"
+        ],
+        "id": "topic:1"
+      }
+    ],
+    "mood": {
+      "label": "hyped",
+      "score": 0.8
+    },
+    "ts": 1793638122742,
+    "sim": true,
+    "status": "ready",
+    "detail": "Updated from the last 60 seconds of chat",
+    "windowCount": 458,
+    "sampledCount": 4
+  }
+]

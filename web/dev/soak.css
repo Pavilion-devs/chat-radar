@@ -1,0 +1,2 @@
+@import url('/shared/tokens.css');
+*{box-sizing:border-box}body{margin:0;background:var(--ink-0)}iframe{display:block;border:0;width:1920px;height:1080px}#small{width:1280px;height:720px}

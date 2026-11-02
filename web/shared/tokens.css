@@ -36,6 +36,7 @@
   --ink-blue: #5AA9FF;
   --transparent: transparent;
   --marker-opacity: .85;
+  --marker-streak-opacity: .72;
   --tape-opacity: .7;
   --opacity-dimmed: .6;
   --opacity-disabled: .5;
@@ -131,15 +132,19 @@
   --marks-review-swipe-height: 42px;
   --marks-review-tally-width: 256px;
   --marks-review-tally-height: 54px;
-  --marks-review-circle-width: 360px;
-  --marks-review-circle-height: 82px;
+  --marks-review-circle-width: 440px;
+  --marks-review-circle-height: 132px;
   --marks-review-underline-width: 160px;
   --marks-review-underline-height: 20px;
   --marks-review-stamp-width: 240px;
   --marks-review-stamp-height: 96px;
-  --marks-review-tape-width: 220px;
-  --marks-review-tape-height: 42px;
+  --marks-review-tape-width: 96px;
+  --marks-review-tape-height: 28px;
   --mark-swipe-offset: 3px;
+  --mark-circle-clearance: 10px;
+  --marks-review-polaroid-width: 280px;
+  --marks-review-photo-height: 144px;
+  --marks-review-polaroid-canvas-height: 248px;
 
   /* Temporary aliases for the previous markup. Remove during steps 3 and 4. */
   --bg: var(--ink-0);
@@ -158,3 +163,8 @@
   :root { --motion: 0; }
 }
 :root[data-motion='reduced'] { --motion: 0; }
+
+/* Calm overlay composition and local review assets. */
+:root{--overlay-header-height:64px;--overlay-row-height:136px;--overlay-label-height:42px;--overlay-circle-height:96px;--overlay-tally-width:144px;--overlay-tally-height:44px;--overlay-mood-height:80px;--type-overlay-mood:24px;--overlay-pill-height:56px;--overlay-pill-radius:28px;--dev-bg-bright:url('/dev/bright.jpg');--dev-bg-dark:url('/dev/dark.jpg')}
+
+:root{--overlay-label-track:264px;--overlay-count-track:106px}

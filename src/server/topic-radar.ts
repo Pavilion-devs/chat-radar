@@ -47,7 +47,7 @@ export class RadarService {
       const timeout=new Promise<never>((_,reject)=>{signal.addEventListener('abort',()=>reject(new Error('Radar cancelled')),{once:true});this.timeout=setTimeout(()=>{this.abort?.abort();reject(new Error('Radar timeout'));},this.options.timeoutMs ?? 30_000);});
       const raw=await Promise.race([this.options.client.analyze(sample,previous?.topics || [],signal),timeout]);
       if (this.closed || signal.aborted) return;
-      const output=validateRadar(raw,sample.total,new Set(sample.messages.map(m=>m.text)));
+      const output=validateRadar(raw,sample);
       const state:RadarState={...output,topics:this.model.merge(output,previous?.topics || []).map(topic=>({...topic,count_estimate:Math.min(sample.total,topic.count_estimate)})),ts:this.now(),sim,status:'ready',detail:'Updated from the last 60 seconds of chat',windowCount:sample.total,sampledCount:sample.messages.length};
       this.states.set(sim,state);this.signatures.set(sim,signature);this.publish(state);
     } catch (error) {

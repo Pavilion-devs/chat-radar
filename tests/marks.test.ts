@@ -40,9 +40,43 @@ it('keeps stamp distress and tape rotation seeded; stamp text remains separate r
   expect(first.texture!.split('Z').length).toBeGreaterThan(20);
   const tape=markGeometry('tape','clip-id');expect(Math.abs(tape.rotation)).toBeGreaterThanOrEqual(1);expect(Math.abs(tape.rotation)).toBeLessThanOrEqual(2);
 });
+it('gives the marker a drifting centerline, tapered ends and two separate pigment streaks',()=>{
+  for(let seed=0;seed<50;seed++){
+    const mark=markGeometry('highlighter',`marker-${seed}`),body=mark.parts[0]!;
+    const ys=body.centerline!.map(point=>point.y),widths=body.widths;
+    expect(Math.max(...ys)-Math.min(...ys)).toBeGreaterThanOrEqual(1);
+    expect(Math.max(...ys)-Math.min(...ys)).toBeLessThanOrEqual(3);
+    expect(widths[0]).toBeLessThan(widths[20]!*.7);
+    expect(widths.at(-1)).toBeLessThan(widths[20]!*.7);
+    expect(mark.pigment!.streaks).toHaveLength(2);
+    expect(mark.pigment!.cutout).toContain(mark.pigment!.streaks[0]);
+  }
+});
+it('protects the entire circle text box across seeds, with a heavy downstroke and lifted overshoot',()=>{
+  for(let seed=0;seed<200;seed++){
+    const circle=markGeometry('circle',`circle-${seed}`,{width:440,height:132,contentWidth:310,contentHeight:35,clearance:10}),box=circle.protection!,loop=circle.parts[0]!;
+    expect(circle.overshootDegrees).toBeGreaterThanOrEqual(15);
+    expect(circle.overshootDegrees).toBeLessThanOrEqual(25);
+    for(const point of loop.outline){
+      const distance=Math.hypot(Math.max(box.left-point.x,0,point.x-box.right),Math.max(box.top-point.y,0,point.y-box.bottom));
+      expect(distance).toBeGreaterThanOrEqual(10);
+    }
+    expect(Math.max(...loop.widths)).toBeGreaterThan(Math.min(...loop.widths)*5);
+    expect(loop.widths.at(-1)).toBeLessThan(loop.widths[0]!*.5);
+  }
+  expect(()=>markGeometry('circle','tight',{width:320,height:60,contentWidth:310,contentHeight:35})).toThrow(RangeError);
+});
+it('tears both tape ends instead of leaving rectangular caps',()=>{
+  const tape=markGeometry('tape','photo',{width:96,height:28}),outline=tape.parts[0]!.outline;
+  const left=outline.filter(point=>point.x<10),right=outline.filter(point=>point.x>86);
+  expect(new Set(left.map(point=>point.x)).size).toBeGreaterThan(5);
+  expect(new Set(right.map(point=>point.x)).size).toBeGreaterThan(5);
+});
 it('uses the approved contrast thresholds without disguising forbidden paper-on-alarm text',()=>{
   expect(overlayContrastThreshold(20,700)).toBe(7);expect(overlayContrastThreshold(24,500)).toBe(7);expect(overlayContrastThreshold(24,700)).toBe(4.5);
   expect(contrastRatio('#A6A299','#0B0C0E')).toBeGreaterThanOrEqual(7);
   expect(contrastRatio('#0B0C0E','#FF4A3D')).toBeGreaterThanOrEqual(4.5);
   expect(contrastRatio('#F3EEE4','#FF4A3D')).toBeLessThan(4.5);
+  // 72% marker pigment over ink: streaks also pass for labels fitted below 24px.
+  expect(contrastRatio('#0B0C0E','#BB9F30')).toBeGreaterThanOrEqual(7);
 });

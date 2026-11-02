@@ -101,7 +101,7 @@ it('restores active alerts on reconnect and clears them only on an explicit JSON
 });
 it('exposes disabled radar without a key and restores a successful snapshot on WebSocket reconnect',async()=>{
  const disabled=await fixture();expect(await (await fetch(disabled.url+'/radar')).json()).toMatchObject({status:'disabled',topics:[]});
- const analyze=vi.fn(async()=>({topics:[{label:'Next game',kind:'question',count_estimate:1,examples:['next game?','next game?'],urgency:0.2}],mood:{label:'Curious',score:0.3}}));
+ const analyze=vi.fn(async()=>({topics:[{label:'Next game',kind:'question',message_indices:[0],urgency:0.2}],mood:{label:'curious',score:0.3}}));
  const f=await fixture(undefined,{client:{analyze}});
  f.pipeline.ingest({id:'radar-input',user:{id:'v',name:'Viewer',login:'viewer'},text:'next game?',ts:Date.now(),badges:[],sim:false});
  await f.radar.refresh();expect(await (await fetch(f.url+'/radar')).json()).toMatchObject({status:'ready',topics:[{label:'Next game'}]});

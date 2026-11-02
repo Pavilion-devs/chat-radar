@@ -3,6 +3,8 @@ dist/
 web/dashboard/client.js
 web/overlay/*.js
 web/shared/*.js
+web/dev/*.js
+web/dev/review-captures/
 .env
 .env.*
 !.env.example
