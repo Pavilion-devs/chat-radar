@@ -95,6 +95,7 @@ export function createApp(config:Config, auth:TwitchAuth, pipeline:Pipeline, con
   app.use('/dashboard',express.static(resolve('web/dashboard')));
   app.use('/overlay',express.static(resolve('web/overlay')));
   app.use('/shared',express.static(resolve('web/shared')));
+  app.use('/marks',express.static(resolve('web/marks')));
   app.get('/',(_req,res)=>res.redirect('/dashboard/'));
   const server=createServer(app);
   const hub=new WebSocketServer({noServer:true,maxPayload:1024});

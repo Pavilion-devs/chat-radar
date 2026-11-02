@@ -126,14 +126,16 @@ PORT=3000
 
 ### Phase 4: Overlay and dashboard design (stage-ready)
 **Follow `DESIGN.md`.** It replaces the earlier glass-panel/emoji-toast idea. The current overlay CSS (gradient glass panel, mint glow, breathing orb) breaks its anti-slop rules and gets rebuilt.
-- [ ] Tokens (`web/shared/tokens.css`): colors, type, spacing, motion durations/easings, reduced motion (DESIGN §4)
-- [ ] Marks library (`web/shared/marks.ts`): seeded ribbon SVGs for highlighter, tally, circle, underline, stamp, tape (DESIGN §5)
+- [x] Tokens (`web/shared/tokens.css`): colors, type, spacing, motion durations/easings, reduced motion (DESIGN §4). Step 1 approved by the user; updated to the revised 20px wordmark, `--graphite: #A6A299`, and size/weight-dependent contrast thresholds. All five approved review pairs pass at `/shared/token-review.html`. Caveat and Phosphor remain self-hosted.
+- [x] Marks library (`web/shared/marks.ts`): original seeded filled-ribbon SVGs for highlighter, tally, circle, underline, stamp, tape (DESIGN §5). Review page `/marks/` supports ink/paper, seed comparison, incremental tallies, and reduced motion. Shared draw queue caps active ribbons at two. Build and 146 tests pass; Step 2 screenshot review pending. Overlay work has not started.
 - [ ] Overlay calm state: opaque radar panel, ≤4 topics, FLIP reorder, highlighter on #1, tallies, mood line, idle pill (DESIGN §6.1)
 - [ ] Overlay notice state: digit roll, margin note, clip polaroid with the Twitch thumbnail (DESIGN §6.2)
 - [ ] Overlay alarm state: top strip + stamp, persists until fixed, FIXED stamp on clear (DESIGN §6.3)
 - [ ] URL params: `position`, `layout`, `scale`, `motion`, `marks`, `theme` (DESIGN §6.5)
 - [ ] Dashboard: calm, three columns, status bar with sparkline, hotkeys + `?` cheatsheet (DESIGN §7)
 - [ ] Setup page at `/` with demo-mode button (DESIGN §9)
+
+**Review status:** Step 1 approved. The user's DESIGN.md revision resolves both original flags: 20px wordmark; graphite/ink-0 7.69:1; ink-0/alarm 5.87:1 for bold 24px+; paper/ink-0 16.92:1 for the 20px count/sample band. The token page reports the correct threshold per pair. Step 2 is implemented and awaits visual review at `/marks/`; all overlay, dashboard, and setup items remain unchecked.
 
 **Done when:** every item in the DESIGN.md §13 checklist passes, it reads well at 720p on a phone over both a bright and a dark game screenshot, and it looks good at 1080p in OBS.
 

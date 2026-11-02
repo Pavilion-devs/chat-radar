@@ -1,0 +1,160 @@
+/* Chat Radar — DESIGN.md §4. Color values and timing literals live here only. */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/shared/fonts/space-grotesk.ttf') format('truetype');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Inter;
+  src: url('/shared/fonts/inter.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Caveat;
+  src: url('/shared/fonts/caveat.ttf') format('truetype');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Five inks, one accent. Status and interaction colors have separate jobs. */
+  --ink-0: #0B0C0E;
+  --ink-1: #16181C;
+  --ink-2: #2A2D33;
+  --paper: #F3EEE4;
+  --graphite: #A6A299;
+  --marker: #FFD83D;
+  --alarm: #FF4A3D;
+  --ok: #38D98A;
+  --ink-blue: #5AA9FF;
+  --transparent: transparent;
+  --marker-opacity: .85;
+  --tape-opacity: .7;
+  --opacity-dimmed: .6;
+  --opacity-disabled: .5;
+  --shadow-short: 0 1px 0 #0006, 0 6px 14px #0005;
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-ui: Inter, system-ui, sans-serif;
+  --font-note: Caveat, cursive;
+  --weight-display: 700;
+  --weight-ui: 500;
+  --weight-strong: 600;
+  --weight-note: 600;
+  --type-wordmark: 20px;
+  --type-overlay-topic: 30px;
+  --type-overlay-number: 32px;
+  --type-overlay-ui: 20px;
+  --type-overlay-min: 20px;
+  --type-dashboard-display: 20px;
+  --type-dashboard-number: 18px;
+  --type-dashboard-ui: 15px;
+  --type-dashboard-small: 14px;
+  --type-margin-note: 22px;
+  --type-alarm: 40px;
+  --type-polaroid-title: 22px;
+  --line-tight: 1.15;
+  --line-ui: 1.4;
+  --line-reading: 1.6;
+  --tracking-normal: 0;
+
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --inset-overlay: var(--space-16);
+  --inset-dashboard: var(--space-12);
+  --rule: 1px;
+  --radius-panel: 6px;
+  --radius-row: 4px;
+  --radius-dot: 50%;
+  --radius-nested: max(0px, calc(var(--radius-panel) - var(--inset-overlay)));
+  --overlay-safe-area: var(--space-48);
+  --overlay-width: 420px;
+  --overlay-width-compact: 360px;
+  --overlay-canvas-width: 1920px;
+  --overlay-canvas-height: 1080px;
+  --hit-target: 40px;
+  --focus-width: 2px;
+  --focus-offset: var(--space-4);
+  --icon-small: 20px;
+  --icon-medium: 24px;
+  --icon-large: 32px;
+  --icon-alarm: 48px;
+  --tilt-paper: -2deg;
+  --tilt-tape: 1deg;
+  --tilt-stamp: -3deg;
+
+  /* Every motion duration shares the same reduced-motion switch. */
+  --motion: 1;
+  --dur-press: calc(90ms * var(--motion));
+  --dur-hover: calc(120ms * var(--motion));
+  --dur-fade: calc(150ms * var(--motion));
+  --dur-pop: calc(180ms * var(--motion));
+  --dur-sheet: calc(300ms * var(--motion));
+  --dur-toss: calc(440ms * var(--motion));
+  --dur-draw: calc(600ms * var(--motion));
+  --dur-reorder: calc(500ms * var(--motion));
+  --dur-alarm-ring: calc(2000ms * var(--motion));
+  --stagger-min: calc(40ms * var(--motion));
+  --stagger: calc(60ms * var(--motion));
+  --stagger-max: calc(80ms * var(--motion));
+  --ease-out: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --ease-travel: cubic-bezier(0.45, 0, 0.1, 1);
+  --ease-settle: cubic-bezier(0.2, 0.9, 0.25, 1.12);
+  --ease-pop: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+
+  /* Reading time is retained when movement is reduced. These are not animations. */
+  --hold-payoff: 2000ms;
+  --hold-margin-note: 4000ms;
+  --hold-polaroid: 6000ms;
+
+  /* Review-surface dimensions; not overlay typography overrides. */
+  --review-max-width: 1232px;
+  --review-title: 48px;
+  --review-swatch-height: 64px;
+  --review-motion-width: 160px;
+  --review-motion-height: 8px;
+  --marks-review-column: 440px;
+  --marks-review-canvas-height: 164px;
+  --marks-review-swipe-width: 320px;
+  --marks-review-swipe-height: 42px;
+  --marks-review-tally-width: 256px;
+  --marks-review-tally-height: 54px;
+  --marks-review-circle-width: 360px;
+  --marks-review-circle-height: 82px;
+  --marks-review-underline-width: 160px;
+  --marks-review-underline-height: 20px;
+  --marks-review-stamp-width: 240px;
+  --marks-review-stamp-height: 96px;
+  --marks-review-tape-width: 220px;
+  --marks-review-tape-height: 42px;
+  --mark-swipe-offset: 3px;
+
+  /* Temporary aliases for the previous markup. Remove during steps 3 and 4. */
+  --bg: var(--ink-0);
+  --panel: var(--ink-1);
+  --line: var(--ink-2);
+  --muted: var(--graphite);
+  --text: var(--paper);
+  --mint: var(--marker);
+  --blue: var(--ink-blue);
+  --violet: var(--graphite);
+  --amber: var(--marker);
+  --red: var(--alarm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion: 0; }
+}
+:root[data-motion='reduced'] { --motion: 0; }

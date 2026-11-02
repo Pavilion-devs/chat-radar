@@ -28,6 +28,7 @@ it('serves static pages and streams pipeline events through a real WebSocket imm
   expect((await fetch(f.url+'/overlay/client.js')).status).toBe(200);
   expect((await fetch(f.url+'/shared/model.js')).status).toBe(200);
   expect((await fetch(f.url+'/shared/base.css')).status).toBe(200);
+  expect((await fetch(f.url+'/marks/')).status).toBe(200);
   const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`);
   const events: {type:string;data:{text?:string}}[]=[];ws.on('message',data=>events.push(JSON.parse(data.toString())));
   await new Promise<void>((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});

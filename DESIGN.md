@@ -61,7 +61,7 @@ All colors, sizes and durations are CSS custom properties in `web/shared/tokens.
 | `--ink-1` | `#16181C` | Raised surface (rows, cards on the dashboard) |
 | `--ink-2` | `#2A2D33` | Hairline rules, tracks |
 | `--paper` | `#F3EEE4` | Primary text on ink; paper surface on the report |
-| `--graphite` | `#9A968E` | Meta text: captions, hints, counts' units |
+| `--graphite` | `#A6A299` | Meta text: captions, hints, counts' units (7.7:1 on `--ink-0`) |
 | `--marker` | `#FFD83D` | **The accent.** Highlighter, the #1 topic, the one main action |
 | `--alarm` | `#FF4A3D` | Broken things only. Always paired with a stamp/icon + word |
 | `--ok` | `#38D98A` | Fixed / all good / live |
@@ -69,13 +69,14 @@ All colors, sizes and durations are CSS custom properties in `web/shared/tokens.
 
 Rules:
 - Highlighter uses `mix-blend-mode: multiply` on paper (report) and a solid swipe behind text at 85% on ink (overlay), so text stays at full contrast.
-- Text contrast is at least 7:1 on the overlay (it gets compressed by video encoding) and 4.5:1 elsewhere.
+- **Overlay contrast** (it gets compressed by video encoding): text under 24px needs at least 7:1; bold text 24px and up needs at least 4.5:1. Everywhere else: 4.5:1.
+- **Never put `--paper` text on `--alarm`** (2.9:1). On the alarm red, text is `--ink-0` (5.9:1, so only bold 24px+). Smaller text in an alarm sits on an `--ink-0` band (see §6.3).
 - Shadows are short: `0 1px 0 #0006, 0 6px 14px #0005`. Never long gray blurs (Looseleaf law 6).
 
 ### Type
 | Role | Face | Overlay size @1080p | Dashboard size |
 |---|---|---|---|
-| Display / wordmark / topic labels | **Space Grotesk** 700 (already in `web/shared/fonts`) | 30px topic, 18px wordmark | 20px |
+| Display / wordmark / topic labels | **Space Grotesk** 700 (already in `web/shared/fonts`) | 30px topic, 20px wordmark | 20px |
 | Numbers | Space Grotesk 700, `font-variant-numeric: tabular-nums` | 32px | 18px |
 | Body / UI | **Inter** 500/600 (already in repo) | 20px minimum | 14–15px |
 | Margin notes only | **Caveat** 600 (Google Fonts, OFL; self-host like the others) | 22px | — |
@@ -134,6 +135,13 @@ Build these as small SVG generators in `web/shared/marks.ts`. Each mark is a **f
 
 Budget: at most **2 marks drawing at the same time** on the overlay. If more are queued, they wait.
 
+Implementation notes for the marks library:
+- Visible strokes are filled ribbon outlines with pressure variation. A centerline stroke exists only inside an alpha mask to reveal a ribbon; it is not the visible mark.
+- Count the drawing budget per ribbon, including each tally. Tally seeds include their index so adding a mark preserves every earlier path. Stop at 20 tallies and keep the exact number beside them.
+- On paper, tallies and mood underlines use `--ink-0`; highlighters retain `--marker` with multiply blending. Ink-panel highlighters use 85% opacity.
+- Stamp words use Space Grotesk 700, up to 40px and never below 24px. Increase the frame for a longer word rather than squeezing it into unreadable type. Distress is seeded negative space, not an animated noise filter.
+- A single draw queue is shared by each surface. Reduced motion completes active and queued ribbons immediately.
+
 ---
 
 ## 6. Overlay (`/overlay`): the hero
@@ -143,7 +151,7 @@ Transparent background, 1920×1080, `pointer-events: none`. Three attention leve
 ### 6.1 Calm: the radar panel
 ```
 ┌──────────────────────────────────┐  ← opaque --ink-0, 6px radius, 420px wide
-│ CHAT RADAR             ● LIVE  SIM│  ← 18px wordmark; status dot + word; SIM badge only in sim mode
+│ CHAT RADAR             ● LIVE  SIM│  ← 20px wordmark; status dot + word; SIM badge only in sim mode
 │──────────────────────────────────│
 │ ▓▓▓Play Fortnite next▓▓▓   1,284 │  ← #1: highlighter swipe, 30px, tally marks under/beside the count
 │  ? question         𝍸𝍸𝍸𝍸 ││       │
@@ -166,8 +174,10 @@ Transparent background, 1920×1080, `pointer-events: none`. Three attention leve
 - **Clip made:** a **polaroid** tosses in at bottom-left (`--dur-toss`, `--ease-settle`, rotated about −2°). It shows the clip's `thumbnail_url` from Twitch, two strips of tape, and the moment title underneath in Inter 600 22px (not handwriting, it has to be read), with "CLIPPED" as a small stamp in the corner. It holds 6s, then slides out. In sim mode the polaroid has no thumbnail; it shows "Moment marked" with a sim badge instead (never a fake thumbnail).
 
 ### 6.3 Alarm: something is broken
-- **A full-width strip at the top** (inside the 48px safe area): solid `--alarm`, Phosphor icon (`MicrophoneSlash`, `SpeakerSimpleSlash`, `MonitorPlay`, `WifiSlash`…) at 48px, the problem in Space Grotesk 700 40px caps ("CHAT SAYS YOU'RE MUTED"), and a count + one real sample in Inter 20px ("212 people · 'bro we cant hear u'").
-- **A stamp** slams onto the right edge of the strip on the first frame (`--ease-pop`, rotated −3°, one overshoot): `MUTED`, `FROZEN`, `NO GAME AUDIO`…
+- **A full-width strip at the top** (inside the 48px safe area), in two bands:
+  - **Red band:** solid `--alarm` with `--ink-0` content: a Phosphor icon (`MicrophoneSlash`, `SpeakerSimpleSlash`, `MonitorPlay`, `WifiSlash`…) at 48px and the problem in Space Grotesk 700 40px caps ("CHAT SAYS YOU'RE MUTED").
+  - **Ink band** directly under it: `--ink-0` with `--paper` text, a count and one real sample in Inter 20px ("212 people · 'bro we cant hear u'").
+- **A stamp** slams onto the right edge of the red band on the first frame (`--ease-pop`, rotated −3°, one overshoot), drawn in `--ink-0`: `MUTED`, `FROZEN`, `NO GAME AUDIO`…
 - **It stays until it's fixed.** It's dismissed from the dashboard ("Fixed") or when the complaint rate falls below threshold for 20s. On fix, the stamp swaps to a green `FIXED` stamp, holds 2s, then the strip slides up.
 - While the alarm is up, the radar panel stays visible below it but dims to 60%. Only one alarm shows at a time; if a second category fires, it shows as a small count "+1 more" on the strip.
 
