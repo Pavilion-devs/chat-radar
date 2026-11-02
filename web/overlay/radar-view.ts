@@ -4,14 +4,16 @@ import {markGeometry,renderMark,renderHighlightedLabel,setMarkProgress,MarkAnima
 import {OverlayMotion} from './motion.js';
 import {DigitCount} from './digits.js';
 import {rowMotion} from './row-motion.js';
-import {fitLabel,tallyUnit} from './state.js';
+import {fitLabel,tallyUnit,radarZones,tallyEvidence} from './state.js';
 const kinds:Record<Topic['kind'],{icon:IconName;label:string}>={question:{icon:'question',label:'Question'},request:{icon:'hand-pointing',label:'Request'},reaction:{icon:'lightning',label:'Reaction'},complaint:{icon:'warning-circle',label:'Complaint'}};
 interface Row {row:HTMLLIElement;body:HTMLElement;label:HTMLElement;plain:HTMLElement;annotation:HTMLElement;count:DigitCount;kind:HTMLElement;tally:HTMLElement;signature:string;tallySignature:string;topic?:Topic}
 export class RadarView {
   private rows=new Map<string,Row>();private version=0;private mood='';private score:number|undefined;
   readonly motion=new OverlayMotion();readonly marks=new MarkAnimator(state=>{document.body.dataset.drawing=String(state.drawing);document.body.dataset.maxDrawing=String(Math.max(Number(document.body.dataset.maxDrawing??0),state.drawing));});
   private canvas=document.createElement('canvas');
-  constructor(private list:HTMLElement,private maximum=4){}
+  private reactionCount=new DigitCount(document.getElementById('reaction-count')!,this.motion);
+  private reactionId:string|undefined;
+  constructor(private list:HTMLElement,private compact=false){document.getElementById('reaction-icon')!.append(icon('lightning',20));}
   private measure=(text:string,size:number)=>{const context=this.canvas.getContext('2d')!;context.font=`700 ${size}px "Space Grotesk"`;return context.measureText(text).width;};
   private create(topic:Topic){
     const row=document.createElement('li');row.className='radar-row';row.dataset.id=topic.id;
@@ -23,12 +25,18 @@ export class RadarView {
     return{row,body,label,plain,annotation,count:new DigitCount(counter,this.motion),kind,tally,signature:'',tallySignature:''} satisfies Row;
   }
   async render(topics:Topic[],animate=true){
-    this.finish();const version=++this.version,selected=topics.slice(0,this.maximum),ids=new Set(selected.map(topic=>topic.id));
+    this.finish();const version=++this.version,{asking:selected,reacting}=radarZones(topics,this.compact),ids=new Set(selected.map(topic=>topic.id));
+    const reactionZone=document.getElementById('reacting-zone')!;reactionZone.hidden=!reacting;
+    if(reacting){document.getElementById('reaction-label')!.textContent=reacting.label;document.getElementById('reaction')!.dataset.id=reacting.id;this.reactionCount.set(reacting.count_estimate,animate&&this.reactionId!==undefined);}
+    this.reactionId=reacting?.id;
+    // Hide the empty asking header after its last exiting row has collapsed.
+    if(selected.length)document.getElementById('asking-zone')!.hidden=false;
     const exits=[...this.rows].filter(([id])=>!ids.has(id));
     // Keep exiting content in normal flow while its actual height collapses.
     // Survivors follow that collapse; an empty translated slot cannot remain.
     if(animate&&exits.length){await Promise.all(exits.map(([,view])=>{view.row.dataset.exiting='true';view.row.style.height='0px';return this.motion.animate(view.row,[{height:`${view.row.scrollHeight}px`,paddingTop:0,paddingBottom:0},{height:'0px',paddingTop:0,paddingBottom:0}],'--dur-reorder','--ease-travel');}));if(version!==this.version)return;}
     for(const [id,view]of exits){view.row.remove();this.rows.delete(id);}
+    document.getElementById('asking-zone')!.hidden=!selected.length;
     const snapshots=[...this.list.children].map(row=>row.querySelector<HTMLElement>(':scope > .radar-row-body')!.cloneNode(true) as HTMLElement);
     const before=new Map([...this.rows].map(([id,view])=>[id,view.row.offsetTop])),movements:Promise<void>[]=[],draws:(()=>void)[]=[];
     const unit=tallyUnit(selected);document.getElementById('tally-unit')!.textContent=String(unit);
@@ -51,7 +59,10 @@ export class RadarView {
           if(animate){for(const part of svg.querySelectorAll<SVGGElement>('.mark-part'))part.dataset.phase='queued';draws.push(()=>{void this.marks.draw(svg);});}
         }view.signature=signature;
       }
-      const tallySignature=JSON.stringify([unit,Math.min(20,Math.floor(topic.count_estimate/unit))]);
+      const evidence=tallyEvidence(topic.count_estimate,unit);view.row.dataset.count=String(topic.count_estimate);view.tally.dataset.unit=String(unit);view.tally.dataset.represented=String(evidence.represented);view.tally.dataset.remainder=String(evidence.remainder);
+      let extra=view.tally.querySelector<HTMLElement>('.tally-more');if(!extra){extra=document.createElement('span');extra.className='tally-more';extra.textContent='+';view.tally.append(extra);}extra.hidden=evidence.remainder===0;
+      view.tally.title=`${evidence.marks} marks × ${unit} = ${evidence.represented}${evidence.remainder?`, plus ${evidence.remainder} extra`:''}`;
+      const tallySignature=JSON.stringify([unit,evidence.marks]);
       if(view.tallySignature!==tallySignature){
         // 44px viewport gives ~26px of actual pigment, not a 14px shrunken mark.
         const geometry=markGeometry('tally',topic.id,{count:topic.count_estimate,unit,width:144,height:44,minimumWidth:2.5}),svg=renderMark(geometry),previous=view.tally.querySelector('svg');
@@ -59,7 +70,7 @@ export class RadarView {
           const known=new Set([...previous.querySelectorAll<SVGGElement>('.mark-part')].map(part=>part.dataset.part)),incoming=new Set(geometry.parts.map(part=>part.id));
           for(const part of previous.querySelectorAll<SVGGElement>('.mark-part'))if(!incoming.has(part.dataset.part!))part.remove();
           for(const part of svg.querySelectorAll<SVGGElement>('.mark-part'))if(!known.has(part.dataset.part)){if(animate)part.dataset.phase='queued';previous.append(part);if(animate)draws.push(()=>{void this.marks.draw(previous,[part.dataset.part!]);});}
-        }else{if(animate)for(const part of svg.querySelectorAll<SVGGElement>('.mark-part'))part.dataset.phase='queued';view.tally.append(svg);if(animate)draws.push(()=>{void this.marks.draw(svg);});}
+        }else{if(animate)for(const part of svg.querySelectorAll<SVGGElement>('.mark-part'))part.dataset.phase='queued';view.tally.prepend(svg);if(animate)draws.push(()=>{void this.marks.draw(svg);});}
         view.tallySignature=tallySignature;
       }
     }
@@ -71,6 +82,10 @@ export class RadarView {
       if(!animate||!distance||!snapshot)continue;
       snapshot.className='radar-ghost';snapshot.setAttribute('aria-hidden','true');
       snapshot.querySelector<HTMLElement>('.label-text')!.hidden=false;for(const mark of snapshot.querySelectorAll('.row-annotation'))mark.replaceChildren();
+      // A destination slot must never retain an old, now differently ranked
+      // number or tallies measured in the previous unit during its FLIP.
+      snapshot.querySelector('.radar-count')!.replaceWith(view.body.querySelector('.radar-count')!.cloneNode(true));
+      snapshot.querySelector('.radar-tally')!.replaceWith(view.tally.cloneNode(true));
       const renamed=new Map<string,string>();for(const node of snapshot.querySelectorAll('[id]')){const old=node.id;node.id=`${old}-ghost-${version}-${index}`;renamed.set(old,node.id);}
       for(const node of snapshot.querySelectorAll('*'))for(const attr of [...node.attributes]){let value=attr.value;for(const [old,id]of renamed)value=value===`#${old}`?`#${id}`:value.replaceAll(`url(#${old})`,`url(#${id})`);if(value!==attr.value)node.setAttribute(attr.name,value);}
       view.row.append(snapshot);const frames=rowMotion(distance,view.row.offsetHeight);

@@ -11,7 +11,17 @@ function check(){
   const shown=doc.querySelector<HTMLElement>('#radar-panel')!.dataset.state==='topics';
   if(!shown)continue;
   for(const node of doc.querySelectorAll('.radar-ghost [mask]')){const id=node.getAttribute('mask')?.match(/url\(#([^)]*)\)/)?.[1];if(id&&!doc.getElementById(id))issue('Broken snapshot mask');}
-  if(rows.length>4)issue('More than four rows');if(rows.filter(row=>row.dataset.kind==='reaction').length>1)issue('More than one reaction');
+  const maximum=doc.querySelector<HTMLElement>('#radar-panel')!.dataset.layout==='compact'?2:3;
+  if(rows.length>maximum)issue('Too many asking rows');if(rows.some(row=>row.dataset.kind==='reaction'))issue('Reaction in asking zone');
+  const counts=rows.map(row=>Number(row.querySelector('.radar-count')!.getAttribute('aria-label')?.replaceAll(',','')));
+  if(counts.some((count,i)=>i>0&&count>counts[i-1]!))issue('Asking rank inversion');
+  if(doc.querySelector<HTMLElement>('#asking-zone')!.hidden!==(doc.querySelectorAll('#topics > .radar-row').length===0))issue('Empty asking header visible');
+  const reaction=doc.querySelector<HTMLElement>('#reaction')!,reactionZone=doc.querySelector<HTMLElement>('#reacting-zone')!;
+  if(!reactionZone.hidden){
+   if(reaction.querySelector('.mark-svg,.row-annotation,.radar-tally'))issue('Annotated reaction');
+   for(const node of reaction.querySelectorAll('#reaction-label,#reaction-count')){const style=win.getComputedStyle(node);if(parseFloat(style.fontSize)!==20||style.fontWeight!=='600'||!style.fontFamily.includes('Inter'))issue('Reaction type incorrect');}
+   if(!reaction.querySelector('use')?.getAttribute('href')?.includes('lightning-fill'))issue('Reaction icon incorrect');
+  }
   const list=doc.querySelector<HTMLElement>('#topics')!,all=[...list.children] as HTMLElement[];
   const natural=all.reduce((sum,row)=>sum+row.offsetHeight,0);if(Math.abs(list.offsetHeight-natural)>1)issue('Uncollapsed row space');
   for(const row of rows){
@@ -33,10 +43,14 @@ function check(){
    if(row.dataset.urgent==='true'&&body.querySelector('.label-swipe svg'))issue('Urgent row highlighted');
    if(svgText){const box=svgText.getBBox(),svg=svgText.ownerSVGElement!;if(box.x<0||box.x+box.width>svg.viewBox.baseVal.width)issue('Clipped highlighter text: '+label);}
    for(const path of body.querySelectorAll<SVGGraphicsElement>('.radar-tally .mark-ink')){const box=path.getBBox();report.minTallyInk=Math.min(report.minTallyInk,box.height);if(box.height<23)issue('Tiny tally ink');}
+   const tally=body.querySelector<HTMLElement>('.radar-tally')!,unit=Number(tally.dataset.unit),represented=Number(tally.dataset.represented),remainder=Number(tally.dataset.remainder),count=Number(row.dataset.count),strokes=tally.querySelectorAll('.mark-part').length;
+   if(strokes>20||strokes*unit!==represented||represented>count||represented+remainder!==count)issue('Misrepresented tally');
+   if(tally.querySelector<HTMLElement>('.tally-more')!.hidden!==(remainder===0))issue('Unmarked tally remainder');
+   if(String(unit)!==doc.querySelector('#tally-unit')!.textContent)issue('Tally legend mismatch');
   }
   if(/\s/.test(doc.querySelector('#mood-label')?.textContent?.trim()??''))issue('Multiword mood');
   report.maxDraw=Math.max(report.maxDraw,Number(doc.body.dataset.drawing??0));if(Number(doc.body.dataset.drawing??0)>2)issue('Drawing budget exceeded');
-  report.samples[frame.id]={labels,counts:rows.map(row=>row.querySelector('.radar-count')!.getAttribute('aria-label')),unit:doc.querySelector('#tally-unit')?.textContent,mood:doc.querySelector('#mood-label')?.textContent};
+  report.samples[frame.id]={labels,counts,reacting:reactionZone.hidden?null:{label:doc.querySelector('#reaction-label')?.textContent,count:doc.querySelector('#reaction-count')?.getAttribute('aria-label')},tallies:rows.map(row=>{const tally=row.querySelector<HTMLElement>(':scope > .radar-row-body .radar-tally')!;return{unit:tally.dataset.unit,represented:tally.dataset.represented,remainder:tally.dataset.remainder};}),unit:doc.querySelector('#tally-unit')?.textContent,mood:doc.querySelector('#mood-label')?.textContent};
  }
  report.frames++;document.getElementById('audit')!.textContent=JSON.stringify(report);requestAnimationFrame(check);
 }

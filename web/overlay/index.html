@@ -4,7 +4,9 @@
 <main id="overlay-stage">
 <section id="radar-panel" class="radar-panel" aria-label="Live chat radar" data-state="reading">
 <header class="overlay-header"><span class="overlay-brand">CHAT RADAR</span><span id="pill-label">Reading chat…</span><span class="source-status"><i id="status-dot" aria-hidden="true"></i><span id="source-badge">Connecting</span></span><span id="sim-badge" hidden>SIM</span></header>
-<div id="radar-content" hidden><ol id="topics" aria-label="Top chat topics"></ol><p class="tally-unit">Each mark = <span id="tally-unit">50</span></p>
+<div id="radar-content" hidden>
+<section id="asking-zone" class="radar-zone" aria-labelledby="asking-heading" hidden><h2 id="asking-heading" class="zone-heading">Chat is asking</h2><ol id="topics" aria-label="Chat is asking, ranked by count"></ol><p class="tally-unit">Each mark = <span id="tally-unit">50</span> · + extra</p></section>
+<section id="reacting-zone" class="radar-zone" aria-labelledby="reacting-heading" hidden><h2 id="reacting-heading" class="zone-heading">Chat is reacting</h2><div id="reaction" class="reaction-row"><span id="reaction-icon" class="reaction-icon"></span><span id="reaction-label"></span><span id="reaction-count" class="reaction-count"></span></div></section>
 <footer class="overlay-mood"><span>Mood</span><span class="mood-word"><strong id="mood-label">Neutral</strong><span id="mood-underline" aria-hidden="true"></span></span><span class="mood-meter" aria-hidden="true"><i id="mood-position"></i></span></footer></div>
 </section>
 <!-- Existing events are retained; their new visual states are reviewed in 3b/3c. -->

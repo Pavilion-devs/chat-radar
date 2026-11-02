@@ -150,20 +150,30 @@ Transparent background, 1920×1080, `pointer-events: none`. Three attention leve
 
 ### 6.1 Calm: the radar panel
 ```
-┌──────────────────────────────────┐  ← opaque --ink-0, 6px radius, 420px wide
-│ CHAT RADAR             ● LIVE  SIM│  ← 20px wordmark; status dot + word; SIM badge only in sim mode
-│──────────────────────────────────│
-│ ▓▓▓Play Fortnite next▓▓▓   1,284 │  ← #1: highlighter swipe, 30px, tally marks under/beside the count
-│  ? question         𝍸𝍸𝍸𝍸 ││       │
-│ Mic sounds crunchy         ⭕ 412 │  ← urgent complaint: circled
-│ W in chat                    388 │
-│ When's the collab?           206 │
-│──────────────────────────────────│
-│ Mood  hyped  ━━━━━━━━━━●━━━━     │  ← single ink line + dot; word carries the meaning
-└──────────────────────────────────┘
+┌────────────────────────────────────┐  ← opaque --ink-0, 6px radius, 420px wide
+│ CHAT RADAR              ● LIVE  SIM │  ← 20px wordmark; SIM only in sim mode
+│────────────────────────────────────│
+│ Chat is asking                     │  ← graphite zone header, 20px
+│ ▓▓▓Play Fortnite next▓▓▓      1,284 │  ← top asking row: highlighter
+│  ? Question       ||||/ ||||/ || + │
+│ (Can't hear you)                412 │  ← urgent complaint: circle only
+│  ! Complaint                 |||| + │
+│ When's the collab?              206 │
+│  ? Question                   || + │
+│ Each mark = 100 · + extra          │  ← applies to asking rows only
+│────────────────────────────────────│
+│ Chat is reacting                   │  ← graphite zone header, 20px
+│ ϟ W stream                   2,692 │  ← slim Inter 600 20px, graphite
+│────────────────────────────────────│
+│ Mood  hyped  ━━━━━━━━━━●━━━━       │
+└────────────────────────────────────┘
 ```
-- **At most 4 topics** (3 in compact). Label ≤5 words, one line, no truncation mid-word.
-- Each row has its kind icon (Phosphor: `Question`, `HandPointing`, `Lightning`, `WarningCircle`) in `--graphite`, and the count right-aligned in tabular numbers.
+- Two explicitly named zones separate actionable chat from reactions. **Chat is asking:** questions, requests and complaints only, up to **3 rows** (**2 in compact**), sorted by count descending. Counts never imply a ranking across zones.
+- The top asking row gets the highlighter. An urgent complaint (urgency ≥0.7) gets the red circle instead, including at #1. Never both; at most one semantic annotation per row. Asking rows retain Phosphor kind icons (`Question`, `HandPointing`, `WarningCircle`) and right-aligned tabular counts.
+- Tallies belong **only to asking rows**. Pick the nice-number unit (10/25/50/100/250/500/1000) from the top asking count, aiming for 2–4 groups. Each stroke represents one complete unit; at most 20 strokes. Show a graphite **+** whenever the exact count has a remainder beyond the drawn full units, including beyond the cap. The shared legend says “Each mark = N · + extra”; the numeric count stays exact. Never let a reaction set this unit or carry tallies.
+- **Chat is reacting:** one slim row for the largest reaction count, below a hairline when both zones exist. Filled lightning icon, chat-voice label and count in **Inter 600 20px**, all graphite. No tallies, highlighter or circle. Only changed count digits roll; reaction labels switch without an entrance/reorder animation.
+- Hide a zone and its header when empty. Maximum **3 asking + 1 reacting** by default, **2 asking + 1 reacting** in the 360px compact panel. No empty headers or reserved slots.
+- Labels remain ≤5 words and ≤22 characters, one line, no truncation mid-word. The top asking label is the hero even when the reaction count is larger.
 - The mood line is one neutral track (`--ink-2`) with a `--paper` dot. No red-to-green gradient. The word ("hyped", "confused", "salty") is the meaning.
 - **Idle pill:** if chat is under ~2 msg/s for 60s, the panel collapses into a small pill (`CHAT RADAR · quiet`), like Apple's Dynamic Island. It expands again when topics form. Nothing animates while idle.
 - When topics are not ready yet: show the pill with "Reading chat…", not a spinner or orb.
@@ -186,7 +196,7 @@ Transparent background, 1920×1080, `pointer-events: none`. Three attention leve
 - **Translated chat:** a lower-third strip, max 2 lines. The original in graphite 18px with a language tag (`ES`, `PT`, `JA`), and the translation in paper 22px. It shows only during a burst of foreign-language chat, not constantly.
 
 ### 6.5 URL parameters
-`?position=right|left` · `?layout=compact` · `?scale=0.75–1.5` · `?motion=reduced` · `?marks=off` (structure only, no hand-drawn layer) · `?theme=paper` (light paper panel for bright games).
+`?position=right|left` · `?layout=compact` (360px, 2 asking + 1 reacting) · `?scale=0.75–1.5` · `?motion=reduced` · `?marks=off` (structure only, no hand-drawn layer) · `?theme=paper` (light paper panel for bright games).
 
 ---
 
@@ -292,8 +302,8 @@ The demo video's core must be **real footage of Chat Radar working on Twitch**. 
 
 - The overlay gets its own DOM renderer (`web/overlay/radar-view.ts`); the dashboard's shared topic renderer and all shared event/data contracts remain unchanged. Pending notice/alarm markup is hidden until its own review step.
 - A 1920×1080 logical canvas scales uniformly to the browser-source viewport, retaining the 48px safe area and 420px panel at 1080p. Normal sources remain transparent; only explicit `?bg=bright|dark` loads the two development game screenshots.
-- Topic labels are chat-voice phrases, ≤5 words AND ≤22 characters, with no kind/category word. They fit from 30px to a 20px floor in a fixed 264px track, followed by a 16px gutter and 106px right-aligned count track. The swipe covers the entire fitted label. Urgent complaints use a circle instead of a highlighter, including at #1; each row has one semantic annotation, in addition to its data tallies. Tally pigment is ~24px tall (44px SVG viewport), at least 2.5px wide, aligned with the count. The global unit comes from 10/25/50/100/250/500/1000 using #1’s count, targeting 10–20 strokes; at low volume it shows honest fewer marks, and above the four-group cap the number carries on.
-- Mood is schema-enforced as one word (hyped, curious, happy, confused, frustrated, salty, welcoming, neutral); it is no longer shortened in the view. Counts come from validated sampled-entry indices, weighted by observed duplicate frequencies, scaled by window / represented-message coverage, then smoothed locally. Reaction variants merge into one topic; actionable topics rank first.
+- Topic labels are chat-voice phrases, ≤5 words AND ≤22 characters, with no kind/category word. They fit from 30px to a 20px floor in a fixed 264px track, followed by a 16px gutter and 106px right-aligned count track. The swipe covers the entire fitted label. Urgent complaints use a circle instead of a highlighter, including at #1; each row has one semantic annotation, in addition to its data tallies. Tally pigment is ~24px tall (44px SVG viewport), at least 2.5px wide, aligned with the count. The asking-zone unit comes from 10/25/50/100/250/500/1000 using its top count, targeting 10–20 strokes. Low volume shows fewer honest marks; every remainder, including beyond the four-group cap, is explicit with + and the exact numeric count. Reactions have no tallies or semantic marks.
+- Mood is schema-enforced as one word (hyped, curious, happy, confused, frustrated, salty, welcoming, neutral); it is no longer shortened in the view. Counts come from validated sampled-entry indices, weighted by observed duplicate frequencies, scaled by window / represented-message coverage, then smoothed locally. Reaction variants merge into one topic. The overlay partitions the existing payload into named asking/reacting zones and sorts within each; the server and public event contracts are unchanged.
 - Quiet mode uses existing simulator rate or deduplicated live-chat receipt buckets. It requires 60 continuous seconds below 2 msg/s, wakes on fresh traffic or newly formed topic IDs, and does not wake merely because an unchanged radar snapshot refreshes. Reading/quiet changes are immediate and still; hidden topics do not animate.
 - Highlighter reveal masks use butt caps extended beyond the pigment footprint, preventing a rounded zero-length dash from exposing the far end at 0%. Internal streak opacity is 72%: its composite over ink is `#BB9F30`, giving ink text 7.56:1 even if a long label fits below 24px. The main pigment remains 85% (10.23:1 composite contrast).
 - `/dev/` is a static local-review route only. Explicit `?review` replays recorded SIM radar payloads from the actual demo pipeline, never writes events or chat, and offers held mid-animation frames. It is omitted from OBS URLs.

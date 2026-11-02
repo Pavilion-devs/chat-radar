@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {CalmState,fitLabel,tallyUnit} from '../web/overlay/state.js';
+import {CalmState,fitLabel,tallyUnit,radarZones,tallyEvidence} from '../web/overlay/state.js';
 import type {Radar} from '../web/shared/model.js';
 import {markGeometry} from '../web/shared/marks.js';
 const radar={topics:[{id:'one',label:'Next game',kind:'question',count_estimate:120,examples:[],urgency:.3}],mood:{label:'excited',score:.7},ts:100,sim:true,status:'ready',detail:'',sampledCount:20,windowCount:200} satisfies Radar;
@@ -10,6 +10,23 @@ it('stays in Reading chat until topics arrive; collapses only after 60 continuou
   state.updateRate(2,60_001);expect(state.state(radar)).toBe('topics');
   state.updateRate(0,60_002);state.updateRate(0,120_001);expect(state.state(radar)).toBe('topics');
   state.updateRate(0,120_002);expect(state.state(radar)).toBe('quiet');
+});
+
+it('ranks asking chat separately from the biggest reaction, regardless of input ordering',()=>{
+ const topic=radar.topics[0]!;
+ const input=[{...topic,id:'noise',kind:'reaction' as const,count_estimate:2692},{...topic,id:'small',count_estimate:155},{...topic,id:'large',kind:'complaint' as const,count_estimate:480},{...topic,id:'medium',kind:'request' as const,count_estimate:200},{...topic,id:'fourth',count_estimate:80},{...topic,id:'other-noise',kind:'reaction' as const,count_estimate:700}];
+ const zones=radarZones(input);expect(zones.asking.map(t=>t.count_estimate)).toEqual([480,200,155]);expect(zones.reacting?.id).toBe('noise');expect(tallyUnit(zones.asking)).toBe(25);
+ expect(radarZones(input,true).asking.map(t=>t.id)).toEqual(['large','medium']);expect(input[0]!.id).toBe('noise');
+ expect(radarZones(input.filter(t=>t.kind==='reaction')).asking).toEqual([]);expect(radarZones(input.filter(t=>t.kind!=='reaction')).reacting).toBeUndefined();expect(radarZones([])).toEqual({asking:[],reacting:undefined});
+});
+
+it('never invents tally volume and accounts for every remainder, including the four-group cap',()=>{
+ for(const count of [0,3,155,249,480,2692,20001,99999]){
+   const unit=tallyUnit([{count_estimate:count}]),evidence=tallyEvidence(count,unit);
+   expect(evidence.marks).toBeLessThanOrEqual(20);expect(evidence.represented).toBeLessThanOrEqual(count);expect(evidence.represented+evidence.remainder).toBe(count);
+   expect(markGeometry('tally','honest',{count,unit,width:144,height:44}).parts.length).toBe(evidence.marks);
+ }
+ expect(tallyEvidence(2692,10)).toEqual({marks:20,represented:200,remainder:2492});
 });
 it('wakes on a newly formed topic without immediately collapsing on the next low-rate tick',()=>{
   const state=new CalmState();state.updateRate(0,0);state.updateRate(0,60_000);expect(state.state(radar)).toBe('quiet');

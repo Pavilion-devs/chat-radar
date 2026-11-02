@@ -168,3 +168,4 @@
 :root{--overlay-header-height:64px;--overlay-row-height:136px;--overlay-label-height:42px;--overlay-circle-height:96px;--overlay-tally-width:144px;--overlay-tally-height:44px;--overlay-mood-height:80px;--type-overlay-mood:24px;--overlay-pill-height:56px;--overlay-pill-radius:28px;--dev-bg-bright:url('/dev/bright.jpg');--dev-bg-dark:url('/dev/dark.jpg')}
 
 :root{--overlay-label-track:264px;--overlay-count-track:106px}
+:root{--overlay-zone-heading-height:48px;--overlay-reaction-height:56px;--overlay-tally-total-width:164px;--overlay-compact-label-track:220px;--overlay-compact-count-track:90px}

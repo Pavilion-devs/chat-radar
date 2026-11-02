@@ -1,40 +1,40 @@
-# Step 3a — sustained correction review
+# Step 3a — explicit asking / reacting zones
 
-2026-11-02. Replaces the earlier single-frame completion claim, which the user's live review correctly reopened. Visual direction is approved; corrected behavior awaits user acceptance. No Step 3b work started.
+2026-11-02. Labels, counts, tallies, mood and spacing were approved; this review fixes the remaining ambiguity between actionable priority and numeric rank. Zone implementation awaits user acceptance. No Step 3b work started.
 
-## What changed
+## Behavior
 
-1. Provider labels are ≤22 characters and ≤5 words, in chat's voice, with no question/request/reaction/complaint word. Prompt examples include “Play Minecraft next”, “Can't hear you”, “What's the next game?” and “W stream”. Local validation enforces bounds and forbidden kind words. Reaction variants are merged locally; actionable topics rank first and only one reaction survives.
-2. The model returns supporting sample indices instead of counts/quotes. Indices point to deduplicated entries with real observed frequencies. Local counts are `sum(support frequencies) × window total / sum(all sample frequencies)`, rounded, then smoothed 60% new / 40% previous and bounded to the window. Quotes are derived from those same entries. Repeated indices, missing/out-of-range evidence and conflicting topic assignments fail validation. Public event fields are unchanged.
-3. Tally ink measures at least 24.07px in the sustained run, rendered through a 144×44 SVG with ≥2.5px widths. White pigment remains readable at 720p. The unit uses 10/25/50/100/250/500/1000, targets 10–20 strokes for #1, is displayed once, and caps at four groups. At fewer than 100 messages, the smallest allowed unit can necessarily yield fewer than two complete groups; marks are not padded or invented.
-4. Labels and counts have fixed 264px / 106px tracks with a 16px gutter. Full swipe geometry follows the complete fitted label. Minimum measured text-to-count gap in the final run: 22.48px.
-5. Exits collapse in normal flow. FLIP travel is clipped into occupied rank cells with aria-hidden outgoing snapshots; their edges meet the incoming body's edges, preventing blank slots or overprinted text. Old semantic marks are omitted from snapshots. Mathematical regression tests cover both directions and moves of one to three rows.
-6. Urgent complaints have a circle only, even at #1. One semantic annotation per live row; count tallies remain separate data marks.
-7. Mood is an enum of single words, enforced in schema and local validation.
+- **Chat is asking:** question/request/complaint only; three rows, sorted by count descending. Top row highlighted, except an urgent complaint receives a circle only. Existing fixed label/count tracks and occupied-slot FLIP remain.
+- **Chat is reacting:** largest reaction, one slim graphite row below a hairline; filled lightning, label and count in Inter 600 20px. Only count digits roll. No tallies/highlight/circle.
+- Empty zones and their headers hide. Compact (`?layout=compact`) is 360px with two asking rows plus one reaction. Other Step 3d parameters remain pending.
+- Asking-only unit: nice numbers 10/25/50/100/250/500/1000, fitted to the top asking count. Every tally represents a complete unit, capped at 20 strokes. Visible **+** means extra messages beyond those full units (including beyond the cap). Shared legend: “Each mark = N · + extra”. Exact numeric counts stay visible. Example from this run: 625 = 12 marks × 50 + 25 extra; a reaction of 6,579 has no tallies.
+- Outgoing FLIP snapshots take the destination slot's count and tally evidence, avoiding old rank numbers or stale units during a swap. Old semantic annotations stay omitted; mark IDs remain distinct.
+- No server, public event contracts, shared connection/model/topics or dashboard changes.
 
-## Full-run evidence
+## Full demo verification
 
-- Normal `/overlay/?bg=bright` and `/overlay/?bg=dark` clients at 1920×1080, plus a normal bright client at 1280×720. All connected live to the same local WebSocket pipeline; no fixture override, injected radar events or fake Twitch messages.
-- Clean complete `scenarios/demo.json`: **10,400/10,400 messages, all five phases**. The configured real Anthropic client produced **20 distinct successful validated radar updates**, zero stale/error updates during the run.
-- Capture began 4.206s before the simulator started and ran for **150 seconds**. **76 timestamps × 3 views = 228 native JPEGs**; consecutive timestamps at two seconds, maximum schedule lateness **5ms**. Source screenshots, raw radar snapshots and manifest are in ignored `data/design/soak-3a-final/`.
-- **All 228 captures were visually inspected**, including mid-arrival, swaps, exits, digit rolls and trailing window changes, in 19 contact sheets. Browse `/dev/soak-gallery.html`; each sheet has all three views at four successive timestamps. Crop previews normalize scale only for review; native captures remain untouched.
-- Continuous animation-frame auditing additionally checks fixed-track gaps, visible active rows, collapsed list space, occupied/non-overlapping transition cells, SVG text bounds, valid snapshot masks, ≤4 live topics, one reaction, one live annotation, one-word mood, ≥20px labels, tally size and ≤2 drawing ribbons. Final audit: **no recorded issues**, minimum gap **22.48px**, minimum tally ink **24.07px**, maximum simultaneous drawing **2**.
-- Initial recording pilots had an invalid timer epoch or gaps between batches and are excluded. The first continuous diagnostic pass exposed crossing-row text during visual inspection; that pass is also excluded. The accepted capture set was produced after the occupied-slot fix in one uninterrupted recording call.
-- `bright-4x.mp4` is a **4× playback of the two-second capture sequence**, not a claim of continuous high-frame-rate video.
+- Clean complete `scenarios/demo.json`: **10,400/10,400 messages, all five phases**, normal local pipeline and configured provider. Normal live WebSocket clients (no `review` param) at bright/dark 1920×1080 plus bright 1280×720. No fixture radar events or fake Twitch messages.
+- **150 seconds, 76 timestamps × 3 views = 228 native JPEGs.** Two-second schedule; intervals 1,997–2,003ms, maximum lateness 3ms. Includes reading, arrivals, urgent complaint becoming top, digit rolls, unit changes, row exits, raid and reaction-only ending.
+- **Every capture visually inspected** in 19 contact sheets. `/dev/soak-gallery.html` links every native full-frame image; previews normalize the panel size for comparison. Source captures, manifest, contact sheets and 4× sampled playback: ignored `data/design/soak-zones-final/`. Prior `soak-3a-final/` is historical, before the zone split.
+- Continuous audit: **20,239 animation-frame checks**, no recorded issues across the three clients. Specifically: no asking-zone rank inversions; every tally has `strokes × unit = represented ≤ count`, `represented + remainder = count`, and visible + iff remainder > 0; legend matches each row; no reaction tallies/annotations; correct Inter 600 20px reaction and filled lightning; hidden empty asking header; row collapse/slot coverage; no label collisions or clipping; one-word mood; one semantic annotation; ≤2 drawing ribbons.
+- Minimum logical text/count gap **22.48px**, minimum tally pigment height **24.08px**, maximum drawing ribbons **2**. Asking counts 1,198 / 495 remained ordered while the separate reaction reached 6,043; later a 457 question and a 5,459 reaction occupy explicitly different zones. Asking header and unit disappear completely in the reaction-only ending.
+- Pure tests cover shuffled inputs, largest-reaction selection, asking-only kinds, 3/2 limits, empty zones, unit independence from reaction volume, and exact tally decomposition at low volume and above the cap. Existing engine tests retain grounded count/evidence/smoothing coverage.
+- The auxiliary raw-event recorder disconnected during the clean restart and contains only the initial waiting snapshot. It is **not used as proof of provider success counts**. The native captures and DOM-audit manifest document this run; `calm-capture.json` intentionally remains the prior actual-demo payload fixture for explicit held-frame review.
+- `bright-4x.mp4` is a 4× playback of two-second samples (76 frames, 38s), not continuous high-frame-rate video. Natural mid-animation frames include `*-022.jpg` (FLIP), `*-034.jpg` / `*-070.jpg` (digits), `*-058.jpg` (swipe).
 
-## DESIGN §13
+## DESIGN §13 — this 3a review
 
-| Check | Result for corrected 3a |
+| Check | Result |
 | --- | --- |
-| 720p / phone readability | PASS in landscape review; larger white tallies and short complete labels. Portrait-phone / OBS acceptance is not claimed. |
-| Bright and dark games | PASS across every captured timestamp. |
-| One hero | PASS: highlighter or urgent circle at #1; no double annotation. |
+| 720p / phone readability | PASS: native 1280×720, also inspected fitted to an 844×475 landscape-phone viewport (`phone.jpg`). Physical-device/portrait and OBS acceptance not claimed. |
+| Bright and dark games | PASS: all 76 timestamps in both backgrounds. |
+| One hero | PASS: the top asking topic; reaction remains slim graphite even with a larger number. Urgent top row has circle only. |
 | Anti-slop rules | PASS: opaque ink, one Phosphor set, plain wordmark, no ornamental loops/glow/gradients/emoji icons. |
-| Meaning beyond color | PASS: kind words/icons, mood word, SIM badge and reading/quiet wording. |
-| Caused motion / changes only / no flashing | PASS: data changes cause rolls/FLIP/marks; occupied clipped transitions and collapsing exits; no idle loop. |
-| Reduced motion | PASS: same zero-motion switch, no active/queued ribbons or ghosts, final readable labels/marks. |
-| Seeded marks | PASS: seeds/prefixes retained; snapshots have distinct SVG IDs without changing paths. |
-| ≤4 topics / label limits / ≥20px type | PASS: schema + local validation + every-frame layout audit. |
-| Simulation labeling | PASS: SIM remains visible while simulated data is shown, including reading state during replay. |
+| Meaning beyond color | PASS: named zones, kind icons/words, explicit remainder + and legend, mood word, SIM and reading/quiet words. |
+| Caused motion / changes only / no flashing | PASS: FLIP/roll/marks caused by data; reaction count roll only; no idle loop. |
+| Reduced motion | PASS: zero active/queued ribbons and no ghosts after changing the review motion switch; readable final state. |
+| Seeded marks | PASS: original seeds/prefixes retained; snapshots get unique SVG IDs without changing paths. |
+| ≤4 topics / label limits / ≥20px | PASS: 3 asking + 1 reacting; compact 2 + 1. Labels ≤22 characters/5 words; compact uses whole-word shortening where needed. |
+| Simulation labeling | PASS: SIM visible while simulated content appears, including reading and reaction-only states. |
 
-Build and **157 tests pass**. This covers schema, sample evidence/frequencies/scaling, reaction consolidation, actionable ranking, unequal/equal grounded counts, per-topic smoothing, nice tally units, FLIP coverage, and existing Twitch/simulator/provider/command regressions. Full Phase 4, notice/alarm/URL options and OBS acceptance remain pending.
+Build and **159 tests pass**. DESIGN §6.1 diagram/rules, compact rules, PLAN and NOTES updated. Full Phase 4 and notice/alarm/remaining URL options/dashboard/setup/OBS acceptance remain pending.

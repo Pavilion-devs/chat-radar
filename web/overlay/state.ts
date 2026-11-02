@@ -1,4 +1,14 @@
-import type {Radar} from '../shared/model.js';
+import type {Radar,Topic} from '../shared/model.js';
+/** Ranking is local to a named zone, never across actionable chat and noise. */
+export function radarZones(topics:readonly Topic[],compact=false){
+  const descending=(a:Topic,b:Topic)=>b.count_estimate-a.count_estimate;
+  return{asking:topics.filter(topic=>topic.kind!=='reaction').sort(descending).slice(0,compact?2:3),reacting:topics.filter(topic=>topic.kind==='reaction').sort(descending)[0]};
+}
+/** Every ribbon represents a complete unit; the visible + accounts for the rest. */
+export function tallyEvidence(count:number,unit:number){
+  const marks=Math.min(20,Math.floor(count/unit)),represented=marks*unit;
+  return{marks,represented,remainder:count-represented};
+}
 /** Receipt-time traffic, not the sampled chat feed, determines quiet mode. */
 export class CalmState {
   private lowSince:number|undefined;
