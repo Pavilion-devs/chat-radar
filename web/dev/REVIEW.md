@@ -1,40 +1,53 @@
-# Step 3a — explicit asking / reacting zones
+# Step 3b — fixed asking type and producer notices
 
-2026-11-02. Labels, counts, tallies, mood and spacing were approved; this review fixes the remaining ambiguity between actionable priority and numeric rank. Zone implementation awaits user acceptance. No Step 3b work started.
+2026-11-02. Two-zone radar is approved. This review covers the requested fixed-type follow-up and Step 3b only. **Stopped before 3c.**
 
-## Behavior
+## What changed
 
-- **Chat is asking:** question/request/complaint only; three rows, sorted by count descending. Top row highlighted, except an urgent complaint receives a circle only. Existing fixed label/count tracks and occupied-slot FLIP remain.
-- **Chat is reacting:** largest reaction, one slim graphite row below a hairline; filled lightning, label and count in Inter 600 20px. Only count digits roll. No tallies/highlight/circle.
-- Empty zones and their headers hide. Compact (`?layout=compact`) is 360px with two asking rows plus one reaction. Other Step 3d parameters remain pending.
-- Asking-only unit: nice numbers 10/25/50/100/250/500/1000, fitted to the top asking count. Every tally represents a complete unit, capped at 20 strokes. Visible **+** means extra messages beyond those full units (including beyond the cap). Shared legend: “Each mark = N · + extra”. Exact numeric counts stay visible. Example from this run: 625 = 12 marks × 50 + 25 extra; a reaction of 6,579 has no tallies.
-- Outgoing FLIP snapshots take the destination slot's count and tally evidence, avoiding old rank numbers or stale units during a swap. Old semantic annotations stay omitted; mark IDs remain distinct.
-- No server, public event contracts, shared connection/model/topics or dashboard changes.
+- Every asking label is **26px Space Grotesk 700**, including #1 and urgent complaints. No per-row font fitting or shortening. Whole words wrap onto a second line, adding 36px to the row. A highlighted label gets one seeded swipe per line, with the existing paper/ink reveal layers; one protected circle encloses both lines. Explicit recorded examples include “What's the next game?”, “No audio, you're muted” and “Play Minecraft next”. Compact keeps the full text too, with two asking rows and one reaction.
+- Radar prompt prefers **≤20 characters wherever possible**; the existing schema's 22-character/5-word ceiling remains compatible with the approved phrases. Counts, evidence sampling, smoothing and event handling retain their existing behavior.
+- The old top swipe withdraws through its shared reveal over `--dur-fade`, leaving readable paper letters as it retreats. Asking rows then FLIP-reorder, and only afterward does the new top swipe/circle draw. Mixed-height transitions cover each rank slot with no overlap; outgoing start positions now handle travel shorter than the destination row height.
+- A surviving asking topic gaining at least **100 messages and 35%** receives a **four-second** Caveat 600 22px margin note with the actual delta and radar-update interval. A seeded filled-ribbon curved arrow points toward that row. Its ink backing keeps contrast over either game.
+- A **bottom-left polaroid** tosses in over 440ms, holds **six seconds after landing**, then exits over 300ms. Tape and clip stamp are already attached when the paper arrives. Title/save updates update the card without replaying the toss or resetting the timer. Distinct moments queue.
+- SIM always displays **“Moment marked” + SIM**, with **no image element**, even if misleading clip fields are supplied. A ready real clip displays its actual Twitch thumbnail and an ink CLIPPED stamp. A missing/failed image has a truthful text state, never a substitute image. Titles are Inter 600 22px.
+- All drawing uses one shared **two-ribbon maximum** queue. Scoped finishing avoids completing unrelated surface marks when the radar refreshes. Reduced motion completes the toss and marks immediately while retaining the six-second hold.
 
-## Full demo verification
+## Necessary server / event change
 
-- Clean complete `scenarios/demo.json`: **10,400/10,400 messages, all five phases**, normal local pipeline and configured provider. Normal live WebSocket clients (no `review` param) at bright/dark 1920×1080 plus bright 1280×720. No fixture radar events or fake Twitch messages.
-- **150 seconds, 76 timestamps × 3 views = 228 native JPEGs.** Two-second schedule; intervals 1,997–2,003ms, maximum lateness 3ms. Includes reading, arrivals, urgent complaint becoming top, digit rolls, unit changes, row exits, raid and reaction-only ending.
-- **Every capture visually inspected** in 19 contact sheets. `/dev/soak-gallery.html` links every native full-frame image; previews normalize the panel size for comparison. Source captures, manifest, contact sheets and 4× sampled playback: ignored `data/design/soak-zones-final/`. Prior `soak-3a-final/` is historical, before the zone split.
-- Continuous audit: **20,239 animation-frame checks**, no recorded issues across the three clients. Specifically: no asking-zone rank inversions; every tally has `strokes × unit = represented ≤ count`, `represented + remainder = count`, and visible + iff remainder > 0; legend matches each row; no reaction tallies/annotations; correct Inter 600 20px reaction and filled lightning; hidden empty asking header; row collapse/slot coverage; no label collisions or clipping; one-word mood; one semantic annotation; ≤2 drawing ribbons.
-- Minimum logical text/count gap **22.48px**, minimum tally pigment height **24.08px**, maximum drawing ribbons **2**. Asking counts 1,198 / 495 remained ordered while the separate reaction reached 6,043; later a 457 question and a 5,459 reaction occupy explicitly different zones. Asking header and unit disappear completely in the reaction-only ending.
-- Pure tests cover shuffled inputs, largest-reaction selection, asking-only kinds, 3/2 limits, empty zones, unit independence from reaction volume, and exact tally decomposition at low volume and above the cap. Existing engine tests retain grounded count/evidence/smoothing coverage.
-- The auxiliary raw-event recorder disconnected during the clean restart and contains only the initial waiting snapshot. It is **not used as proof of provider success counts**. The native captures and DOM-audit manifest document this run; `calm-capture.json` intentionally remains the prior actual-demo payload fixture for explicit held-frame review.
-- `bright-4x.mp4` is a 4× playback of two-second samples (76 frames, 38s), not continuous high-frame-rate video. Natural mid-animation frames include `*-022.jpg` (FLIP), `*-034.jpg` / `*-070.jpg` (digits), `*-058.jpg` (swipe).
+The live clip result previously contained only its URL. Added an optional **`thumbnailUrl`** from the same existing Twitch Get Clips request, validated against HTTPS Twitch CDN families. Existing `clipUrl` helper, fields and stored moments remain compatible. The shared model adds only that optional field; shared connection/topics and dashboard logic are unchanged. Moment storage validates the optional thumbnail.
 
-## DESIGN §13 — this 3a review
+The existing self-only image policy blocked Twitch images. `img-src` now explicitly permits the same three Twitch CDN domain families. Other CSP directives retain their existing scope. Reference: [Twitch Get Clips](https://dev.twitch.tv/docs/api/reference/#get-clips).
 
-| Check | Result |
+Read the previously verified real clip's metadata and rendered its genuine thumbnail through the live presentation branch, saved in `data/design/notice-review/real-clip.jpg`. The review fixture is `web/dev/live-clip-review.json`. This is an **existing recorded real clip**, with no new broadcast, clip creation or invented live chat spike.
+
+## Full demo evidence
+
+- Complete **10,400/10,400 messages, all five phases** of `scenarios/demo.json`, normal shared local pipeline and configured real provider. No fixture radar events or fake Twitch messages. The read-only observer recorded **18 distinct ready radar updates**, with no error/stale statuses during this run.
+- Recorder signals readiness after the first native captures, then the simulator starts. The first capture is **4.415s before run start**. Final recording lasts **150s**, with **76 timestamps × three views = 228 native JPEGs**, plus **three natural intermediate toss frames**. Two-second schedule; maximum start lateness **8ms**.
+- Views: **1920×1080 bright**, **1920×1080 dark**, **1280×720 bright**. All clients are ordinary `/overlay/?bg=…` clients connected to live events, without `review` mode. Explicit backgrounds are development-only.
+- Source JPEGs, raw events, manifest, extra toss manifest and contact sheets: ignored **`data/design/soak-notice-final/`**. All 228 scheduled captures and all three toss captures were visually inspected. The gallery at **`/dev/soak-gallery.html`** has Radar (228 frames), Polaroid (9), Jump notes (21), and Mid toss (3) views; every preview links to its untouched native capture.
+- During recording, **17,983 animation-frame audit ticks** across the three clients found **zero issues**. Checks include fixed 26px/700 asking labels, ≤2 lines, descending asking counts, honest tally decomposition/remainders, unit consistency, no new highlight drawing during reorder, collapsed/occupied/non-overlapping rank slots, full SVG labels, safe text/count gaps, correct reaction styling, one semantic annotation, one-word mood, SIM image exclusion, polaroid title type and global drawing budget.
+- Minimum logical label/count gap **32.95px**; minimum tally pigment height **24.08px**; maximum drawing ribbons **2**.
+- Polaroid landing/exit times were identical in all three clients: `holdAt=1793653397463`, `exitAt=1793653403464`, hence **6.001 seconds fully landed**. One toss/hold/exit sequence per client, despite the title changing during the hold. SIM title changed from “Hype spike in chat” to “Chat Hypes Despite Audio Issues” without a replay.
+- Grounded notes observed: **+383 in 8s**, **+283 in 7s**, **+136 in 8s**. Natural toss captures are `mid-toss-{bright,dark,small}-0.jpg` at about 51.1s. Settled notice frames include `bright-026.jpg`, `dark-027.jpg`, `small-028.jpg`.
+- The earlier timing pilot began 13s into the opening phase and is excluded from final evidence (`soak-notice-timing-pilot/`). It passed behavior, but the synchronized recording above is the acceptance capture set.
+- Additional explicit recorded-review proofs: `data/design/notice-review/wrapped-26px.jpg` shows both two-line annotations; `compact-reduced.jpg` shows compact wrapping and a fully settled SIM polaroid. Reduced-motion audit: drawing 0, queued 0, ghosts 0, moment phase hold, asking labels 26px.
+- Native 720p `small-028.jpg` was also inspected fitted to an **844×475 landscape-phone viewport** (`phone.jpg`). Physical-phone / portrait / OBS acceptance is not claimed.
+- `bright-4x.mp4` is a **4× playback of the two-second samples**, not continuous high-frame-rate footage.
+
+## DESIGN §13 — result for 3a + 3b
+
+| Item | Result |
 | --- | --- |
-| 720p / phone readability | PASS: native 1280×720, also inspected fitted to an 844×475 landscape-phone viewport (`phone.jpg`). Physical-device/portrait and OBS acceptance not claimed. |
-| Bright and dark games | PASS: all 76 timestamps in both backgrounds. |
-| One hero | PASS: the top asking topic; reaction remains slim graphite even with a larger number. Urgent top row has circle only. |
-| Anti-slop rules | PASS: opaque ink, one Phosphor set, plain wordmark, no ornamental loops/glow/gradients/emoji icons. |
-| Meaning beyond color | PASS: named zones, kind icons/words, explicit remainder + and legend, mood word, SIM and reading/quiet words. |
-| Caused motion / changes only / no flashing | PASS: FLIP/roll/marks caused by data; reaction count roll only; no idle loop. |
-| Reduced motion | PASS: zero active/queued ribbons and no ghosts after changing the review motion switch; readable final state. |
-| Seeded marks | PASS: original seeds/prefixes retained; snapshots get unique SVG IDs without changing paths. |
-| ≤4 topics / label limits / ≥20px | PASS: 3 asking + 1 reacting; compact 2 + 1. Labels ≤22 characters/5 words; compact uses whole-word shortening where needed. |
-| Simulation labeling | PASS: SIM visible while simulated content appears, including reading and reaction-only states. |
+| 720p / phone readability | **PASS** in landscape viewport review: radar, SIM badge, polaroid state and Inter title remain legible. |
+| Bright and dark backgrounds | **PASS** across the full capture set, including notes and the polaroid. |
+| One hero / hierarchy | **PASS**: uniform asking type, top-row mark supplies emphasis; the paper notice is the brief payoff, reactions stay slim graphite. |
+| Anti-slop rules | **PASS**: opaque surfaces, Phosphor icons, plain wordmark, no decorative loops/glows/gradients/glass/emoji icons. |
+| Meaning beyond color | **PASS**: named zones, kind words/icons, circle/swipe, actual delta, Moment marked + SIM, CLIPPED stamp and mood word. |
+| Caused motion / only changes / no flashing | **PASS**: reorder precedes the new mark; count changes cause rolls/tallies/notes; one toss per moment; no idle animation or flashing. |
+| Reduced motion | **PASS**: no queued ribbons/ghosts, readable complete two-line marks and landed card; six-second hold retained. |
+| Seeded marks | **PASS**: line seeds, circle, tally prefixes, arrow, tape and stamp stable for the same IDs. |
+| Topic / label / type limits | **PASS**: 3 asking + 1 reaction, compact 2 + 1; all asking type 26px/700, complete wrapping, schema limits retained. |
+| SIM labeling | **PASS**: radar and polaroid explicitly SIM; no SIM image element or false CLIPPED stamp. |
 
-Build and **159 tests pass**. DESIGN §6.1 diagram/rules, compact rules, PLAN and NOTES updated. Full Phase 4 and notice/alarm/remaining URL options/dashboard/setup/OBS acceptance remain pending.
+Build and **162 tests pass**. New/expanded checks cover complete label wrapping, mixed-height slot coverage, grounded note thresholds, real/SIM presentation and safe thumbnail URLs, clip thumbnail propagation and the existing regression suite. Full Phase 4, alarm state, remaining URL options, dashboard, setup and OBS acceptance remain pending.

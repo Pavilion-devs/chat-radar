@@ -15,7 +15,7 @@ export function createApp(config:Config, auth:TwitchAuth, pipeline:Pipeline, con
   const app=express();
   app.disable('x-powered-by');
   app.use((_req,res,next)=>{
-    res.setHeader('Content-Security-Policy',"default-src 'self'; connect-src 'self' ws://localhost:*; style-src 'self'; frame-ancestors 'self'");
+    res.setHeader('Content-Security-Policy',"default-src 'self'; img-src 'self' https://*.twitch.tv https://*.jtvnw.net https://*.twitchcdn.net; connect-src 'self' ws://localhost:*; style-src 'self'; frame-ancestors 'self'");
     res.setHeader('Referrer-Policy','no-referrer');
     res.setHeader('X-Content-Type-Options','nosniff');next();
   });

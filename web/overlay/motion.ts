@@ -12,7 +12,7 @@ export class OverlayMotion {
   constructor(){this.media.addEventListener('change',this.onMotion);this.observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-motion','style']});}
   private onMotion=()=>{if(this.reduced())this.finish();};
   reduced(){return this.media.matches||getComputedStyle(document.documentElement).getPropertyValue('--motion').trim()==='0';}
-  animate(element:HTMLElement,frames:Keyframe[],token:string,ease='--ease-out',delay=0){
+  animate(element:Element,frames:Keyframe[],token:string,ease='--ease-out',delay=0){
     if(this.reduced())return Promise.resolve();const ms=duration(token);if(!ms)return Promise.resolve();
     const animation=element.animate(frames,{duration:ms,easing:easing(ease),delay,fill:'backwards'});this.active.add(animation);
     return animation.finished.catch(()=>{}).then(()=>{this.active.delete(animation);animation.cancel();});

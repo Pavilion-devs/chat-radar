@@ -3,7 +3,7 @@ export interface Status {connected:boolean;channel:string;detail:string;sim:bool
 export interface Topic {id:string;label:string;kind:'question'|'request'|'reaction'|'complaint';count_estimate:number;examples:string[];urgency:number}
 export interface Radar {topics:Topic[];mood:{label:string;score:number};ts:number|null;sim:boolean;status:string;detail:string;sampledCount:number;windowCount:number}
 export interface Alert {id:string;category:string;title:string;uniqueUsers:number;share:number;sample:string[];ts:number;sim:boolean}
-export interface Moment {id:string;ts:number;title:string;titleSource:string;peakRate:number;uniqueChatters:number;sim:boolean;clipStatus:string;clipUrl:string|null;clipReason:string|null;saved:boolean}
+export interface Moment {id:string;ts:number;title:string;titleSource:string;peakRate:number;uniqueChatters:number;sim:boolean;clipStatus:string;clipUrl:string|null;thumbnailUrl?:string;clipReason:string|null;saved:boolean}
 export interface Reply {id:string;ts:number;command:string;text:string;sim:boolean;status:string;cached:boolean;source:string}
 export type Event = {type:'status';data:Status}|{type:'radar';data:Radar}|{type:'chat';data:Chat}|{type:'moment';data:Moment}|{type:'alert';data:Alert}|{type:'alert_cleared';data:{id:string;acknowledgement:string}}|{type:'command_reply';data:Reply};
 export const kinds={question:{icon:'?',label:'Question'},request:{icon:'↗',label:'Request'},reaction:{icon:'✦',label:'Reaction'},complaint:{icon:'!',label:'Concern'}};

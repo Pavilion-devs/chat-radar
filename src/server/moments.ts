@@ -1,8 +1,8 @@
 import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { validClipUrl } from '../twitch/clips.js';
+import { validClipUrl,validThumbnailUrl } from '../twitch/clips.js';
 import type { Moment } from '../types.js';
-const valid=(m:Moment)=>m && typeof m.id==='string' && typeof m.title==='string' && m.title.length<=80 && typeof m.sim==='boolean' && [m.ts,m.peakRate,m.uniqueChatters,m.baselineRate,m.zScore].every(Number.isFinite) && ['pending','fallback','llm'].includes(m.titleSource) && ['marker','pending','ready','failed'].includes(m.clipStatus) && (m.clipStatus==='ready' ? validClipUrl(m.clipUrl):m.clipUrl===null);
+const valid=(m:Moment)=>m && typeof m.id==='string' && typeof m.title==='string' && m.title.length<=80 && typeof m.sim==='boolean' && [m.ts,m.peakRate,m.uniqueChatters,m.baselineRate,m.zScore].every(Number.isFinite) && ['pending','fallback','llm'].includes(m.titleSource) && ['marker','pending','ready','failed'].includes(m.clipStatus) && (m.clipStatus==='ready' ? validClipUrl(m.clipUrl):m.clipUrl===null) && (m.thumbnailUrl===undefined||(!m.sim&&m.clipStatus==='ready'&&validThumbnailUrl(m.thumbnailUrl)));
 export class MomentStore {
   private moments=new Map<string,Moment>();
   private tail:Promise<void>=Promise.resolve();

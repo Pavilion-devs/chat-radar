@@ -1,13 +1,16 @@
 import {connect} from '../shared/connection.js';
-import {Activity,MomentNotices,momentLabel,type Alert,type Radar,type Moment,type Status} from '../shared/model.js';
+import {Activity,MomentNotices,type Alert,type Radar,type Moment,type Status} from '../shared/model.js';
 import {RadarView} from './radar-view.js';
 import {CalmState} from './state.js';
+import {MomentView} from './moment-view.js';
+import {JumpNote} from './jump-note.js';
 const el=(id:string)=>document.getElementById(id)!;
 const params=new URLSearchParams(location.search),panel=el('radar-panel'),banner=el('alert-banner'),toast=el('moment-toast');
 const compact=params.get('layout')==='compact';if(compact)panel.dataset.layout='compact';
 const topics=new RadarView(el('topics'),compact),alerts=new Map<string,Alert>(),notices=new MomentNotices(),calm=new CalmState();
+const momentView=new MomentView(toast,topics.marks),jumpNote=new JumpNote(el('radar-note'),topics.marks);
 const activity=new Activity();
-let radar:Radar|undefined,status:Status|undefined,connected=false,toastTimer:ReturnType<typeof setTimeout>|undefined,reviewHeld=false;
+let radar:Radar|undefined,status:Status|undefined,connected=false,reviewHeld=false;
 const bg=params.get('bg');if(bg==='bright'||bg==='dark')document.body.dataset.bg=bg;
 function layout(){document.body.style.setProperty('--canvas-scale',String(Math.min(innerWidth/1920,innerHeight/1080)));}
 function showAlerts(){
@@ -27,13 +30,10 @@ function showRadar(value:Radar,animate=true){
   const was=radar;radar=value;
   if(value.topics.some(topic=>!was?.topics.some(previous=>previous.id===topic.id)))calm.newTopics();state();
   const moving=animate&&calm.state(value)==='topics';
-  const rendering=topics.render(value.topics,moving);topics.moodLine(value,moving);connection();return rendering;
+  const rendering=topics.render(value.topics,moving);topics.moodLine(value,moving);connection();return rendering.then(()=>{if(moving&&radar===value)jumpNote.show(was,value);});
 }
 function showMoment(moment:Moment){
-  if(!notices.accept(moment))return;toast.hidden=false;toast.classList.toggle('sim',moment.sim);
-  el('moment-state').textContent=moment.sim?'SIMULATION · HYPE MOMENT':momentLabel(moment).toUpperCase();el('moment-title').textContent=moment.title;
-  el('moment-detail').textContent=moment.sim?`${moment.peakRate} messages/s · Local marker`:`${moment.peakRate} messages/s · ${moment.clipStatus==='ready'?'Twitch clip ready':moment.clipStatus==='pending'?'Creating a Twitch clip…':'Moment kept in your dashboard'}`;
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{toast.hidden=true;},10_000);
+  if(notices.accept(moment))momentView.receive(moment);
 }
 connect(event=>{
   if(event.type==='status'){status=event.data;if(!reviewHeld){calm.updateRate(status.simulation?.state==='running'?status.simulation.rate:activity.snapshot().rate);connection();}}
@@ -45,9 +45,10 @@ connect(event=>{
 // authoritative rate. No new server event fields are needed.
 const idleTimer=setInterval(()=>{if(reviewHeld)return;calm.updateRate(status?.simulation?.state==='running'?status.simulation.rate:activity.snapshot().rate);state();},1000);
 window.addEventListener('resize',layout);void document.fonts.ready.then(()=>{layout();if(radar)showRadar(radar,false);});layout();
-window.addEventListener('pagehide',()=>{clearInterval(idleTimer);clearTimeout(toastTimer);topics.dispose();},{once:true});
+window.addEventListener('pagehide',()=>{clearInterval(idleTimer);jumpNote.dispose();momentView.dispose();topics.dispose();},{once:true});
 if(params.has('review'))void import('../dev/overlay-review.js').then(({installReview})=>installReview({
   show:(value,animate)=>{reviewHeld=true;connected=true;return showRadar(value,animate);},
   state:(mode)=>{reviewHeld=true;connected=true;calm.updateRate(2,0);calm.updateRate(0,0);if(mode==='quiet')calm.updateRate(0,60_001);radar=mode==='reading'?undefined:radar;state();el('sim-badge').hidden=false;},
   finish:()=>topics.finish(),resume:()=>{reviewHeld=false;connection();},
+  moment:value=>momentView.receive(value),holdMoment:progress=>momentView.holdFrame(progress),
 }));

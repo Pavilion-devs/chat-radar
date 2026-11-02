@@ -50,7 +50,7 @@
   --weight-strong: 600;
   --weight-note: 600;
   --type-wordmark: 20px;
-  --type-overlay-topic: 30px;
+  --type-overlay-topic: 26px;
   --type-overlay-number: 32px;
   --type-overlay-ui: 20px;
   --type-overlay-min: 20px;
@@ -169,3 +169,9 @@
 
 :root{--overlay-label-track:264px;--overlay-count-track:106px}
 :root{--overlay-zone-heading-height:48px;--overlay-reaction-height:56px;--overlay-tally-total-width:164px;--overlay-compact-label-track:220px;--overlay-compact-count-track:90px}
+
+:root{--overlay-label-line-height:36px;--overlay-note-width:280px;--overlay-note-gap:24px;--overlay-polaroid-width:380px;--overlay-photo-height:196px;--overlay-sim-moment-height:100px;--hold-note:4000ms;--hold-moment:6000ms;--type-polaroid-title:22px;--overlay-tape-width:112px;--overlay-tape-height:32px;--overlay-toss-x:96px;--overlay-toss-y:80px;--overlay-toss-exit:48px}
+
+:root{--tilt-polaroid:-2deg;--tilt-tape-positive:2deg;--overlay-stamp-height:64px}
+
+:root{--overlay-stamp-width:160px}

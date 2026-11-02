@@ -21,13 +21,15 @@ export class CalmState {
   newTopics(now=Date.now()){this.quiet=false;this.lowSince=now;}
   state(radar:Radar|undefined){return this.quiet?'quiet':radar?.topics.length?'topics':'reading';}
 }
-/** Whole words only. Fit the complete label at ≥20px before shortening it. */
-export function fitLabel(label:string,available:number,measure:(text:string,size:number)=>number){
-  const words=label.trim().split(/\s+/).slice(0,5),whole=words.join(' ');
-  for(let size=30;size>=20;size--)if(measure(whole,size)<=available)return{text:whole,size};
-  while(words.length>1){words.pop();const text=words.join(' ')+'…';if(measure(text,20)<=available)return{text,size:20};}
-  // An unusually long single word uses the full label line; the count moves below it.
-  return{text:whole,size:20,wide:true};
+/** One type size for all rows. Prefer balanced whole-word lines; never shrink. */
+export function labelLines(label:string,available:number,measure:(text:string)=>number){
+  const words=label.trim().split(/\s+/),whole=words.join(' ');
+  if(measure(whole)<=available)return[whole];
+  const splits=words.slice(1).map((_,index)=>[words.slice(0,index+1).join(' '),words.slice(index+1).join(' ')]);
+  const fit=splits.filter(lines=>lines.every(line=>measure(line)<=available));
+  if(fit.length)return fit.sort((a,b)=>Math.abs(measure(a[0]!)-measure(a[1]!))-Math.abs(measure(b[0]!)-measure(b[1]!)))[0]!;
+  // Unbroken chat tokens can wrap at a grapheme boundary without losing text.
+  const lines:string[]=[];let line='';for(const character of whole){if(line&&measure(line+character)>available){lines.push(line.trimEnd());line='';}line+=character;}if(line)lines.push(line.trim());return lines;
 }
 export function tallyUnit(topics:readonly {count_estimate:number}[]){
   const count=topics[0]?.count_estimate??0,nice=[10,25,50,100,250,500,1000];

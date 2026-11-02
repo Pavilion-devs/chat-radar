@@ -65,7 +65,7 @@ export class HypeService {
     // Simulated evidence never invokes any Twitch method, including clip creation.
     if(!spike.sim && this.options.clip){
       this.track(this.bounded(signal=>this.options.clip!(signal),this.options.clipTimeoutMs ?? 35_000).then(result=>{
-        moment.clipStatus=result.status;moment.clipUrl=result.status==='ready'?result.url:null;moment.clipReason=result.status==='marker'?result.reason:null;this.persist(moment);
+        moment.clipStatus=result.status;moment.clipUrl=result.status==='ready'?result.url:null;if(result.status==='ready'&&result.thumbnailUrl)moment.thumbnailUrl=result.thumbnailUrl;moment.clipReason=result.status==='marker'?result.reason:null;this.persist(moment);
       }).catch(()=>{moment.clipStatus='failed';moment.clipReason='failed';this.persist(moment);}));
     }
   }

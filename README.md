@@ -167,7 +167,7 @@ Before Twitch setup, run `npm run demo` and watch **Chat commands** in the basic
 | `npm run sim -- --scenario scenarios/demo.json` | Replay a scenario into an existing local server |
 | `npm run demo` | Start the server and the default scenario together without Twitch |
 
-`/overlay/` is a transparent placeholder. The dashboard is a basic connection/message/alert viewer; visual design remains Phase 4.
+`/overlay/` has the two-zone radar with fixed 26px asking labels and notice polaroids. Alarm styling and remaining overlay options are still in Phase 4; the dashboard remains a basic connection/message/alert viewer. Local capture review is at `/dev/soak-gallery.html` when review captures are present.
 
 ## Engine
 

@@ -1,10 +1,11 @@
 import type {Topic,Radar} from '../shared/model.js';
 import {icon,type IconName} from '../shared/icons.js';
-import {markGeometry,renderMark,renderHighlightedLabel,setMarkProgress,MarkAnimator} from '../shared/marks.js';
+import {markGeometry,renderMark,setMarkProgress,MarkAnimator} from '../shared/marks.js';
 import {OverlayMotion} from './motion.js';
 import {DigitCount} from './digits.js';
+import {highlightedLines,circledLines} from './label-mark.js';
 import {rowMotion} from './row-motion.js';
-import {fitLabel,tallyUnit,radarZones,tallyEvidence} from './state.js';
+import {labelLines,tallyUnit,radarZones,tallyEvidence} from './state.js';
 const kinds:Record<Topic['kind'],{icon:IconName;label:string}>={question:{icon:'question',label:'Question'},request:{icon:'hand-pointing',label:'Request'},reaction:{icon:'lightning',label:'Reaction'},complaint:{icon:'warning-circle',label:'Complaint'}};
 interface Row {row:HTMLLIElement;body:HTMLElement;label:HTMLElement;plain:HTMLElement;annotation:HTMLElement;count:DigitCount;kind:HTMLElement;tally:HTMLElement;signature:string;tallySignature:string;topic?:Topic}
 export class RadarView {
@@ -12,7 +13,7 @@ export class RadarView {
   readonly motion=new OverlayMotion();readonly marks=new MarkAnimator(state=>{document.body.dataset.drawing=String(state.drawing);document.body.dataset.maxDrawing=String(Math.max(Number(document.body.dataset.maxDrawing??0),state.drawing));});
   private canvas=document.createElement('canvas');
   private reactionCount=new DigitCount(document.getElementById('reaction-count')!,this.motion);
-  private reactionId:string|undefined;
+  private reactionId:string|undefined;private topId:string|undefined;
   constructor(private list:HTMLElement,private compact=false){document.getElementById('reaction-icon')!.append(icon('lightning',20));}
   private measure=(text:string,size:number)=>{const context=this.canvas.getContext('2d')!;context.font=`700 ${size}px "Space Grotesk"`;return context.measureText(text).width;};
   private create(topic:Topic){
@@ -31,6 +32,9 @@ export class RadarView {
     this.reactionId=reacting?.id;
     // Hide the empty asking header after its last exiting row has collapsed.
     if(selected.length)document.getElementById('asking-zone')!.hidden=false;
+    const previousTop=this.topId?this.rows.get(this.topId):undefined;this.topId=selected[0]?.id;
+    if(animate&&previousTop&&previousTop.topic?.id!==this.topId&&previousTop.annotation.classList.contains('label-swipe')){document.body.dataset.radarPhase='fading';await Promise.all([...previousTop.annotation.querySelectorAll('.mark-reveal')].map(reveal=>this.motion.animate(reveal,[{strokeDashoffset:'0'},{strokeDashoffset:'1'}],'--dur-fade')));if(version!==this.version)return;}
+    document.body.dataset.radarPhase='reordering';
     const exits=[...this.rows].filter(([id])=>!ids.has(id));
     // Keep exiting content in normal flow while its actual height collapses.
     // Survivors follow that collapse; an empty translated slot cannot remain.
@@ -47,15 +51,16 @@ export class RadarView {
       if(old?.kind!==topic.kind)view.kind.replaceChildren(icon(kinds[topic.kind].icon,20),document.createTextNode(kinds[topic.kind].label));
       view.count.set(topic.count_estimate,animate&&!fresh);
       const urgent=topic.kind==='complaint'&&topic.urgency>=.7,highlight=index===0&&!urgent;view.row.dataset.urgent=String(urgent);view.body.dataset.urgent=String(urgent);
-      const fit=fitLabel(topic.label,view.label.clientWidth-(urgent?36:0),this.measure),width=Math.ceil(this.measure(fit.text,fit.size));
-      view.plain.textContent=fit.text;view.plain.style.fontSize=`${fit.size}px`;view.plain.hidden=highlight;
-      const signature=JSON.stringify([fit.text,fit.size,width,urgent,highlight]);
+      const size=parseFloat(getComputedStyle(view.plain).fontSize),lineHeight=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--overlay-label-line-height'));
+      const lines=labelLines(topic.label,view.label.clientWidth-(urgent?36:0),text=>this.measure(text,size)),widths=lines.map(line=>Math.ceil(this.measure(line,size))),width=Math.max(...widths);
+      view.row.style.setProperty('--row-extra',`${(lines.length-1)*lineHeight}px`);view.label.style.height=`${42+(lines.length-1)*lineHeight}px`;view.row.dataset.lines=String(lines.length);
+      view.plain.setAttribute('aria-label',topic.label);view.plain.replaceChildren(...lines.map(line=>{const span=document.createElement('span');span.className='topic-label-line';span.textContent=line;return span;}));view.plain.hidden=highlight;
+      const signature=JSON.stringify([lines,widths,urgent,highlight]);
       if(signature!==view.signature){
         view.annotation.replaceChildren();view.annotation.className=`row-annotation ${urgent?'label-circle':highlight?'label-swipe':''}`;
         if(urgent||highlight){
-          const geometry=urgent?markGeometry('circle',topic.id,{width:Math.max(80,width+48),height:96,contentWidth:width,contentHeight:Math.ceil(fit.size*1.15),clearance:10,ink:'alarm'}):markGeometry('highlighter',topic.id,{width:Math.max(48,width+24),height:42});
-          const svg=urgent?renderMark(geometry):renderHighlightedLabel(geometry,fit.text);svg.querySelectorAll<SVGTextElement>('text').forEach(text=>text.style.fontSize=`${fit.size}px`);
-          view.annotation.style.width=`${geometry.width}px`;view.annotation.append(svg);
+          const svg=urgent?circledLines(topic.id,width,lines.length,lineHeight):highlightedLines(topic.id,lines,widths,lineHeight);
+          view.annotation.style.width=svg.getAttribute('width')+'px';view.annotation.style.height=svg.getAttribute('height')+'px';view.annotation.append(svg);
           if(animate){for(const part of svg.querySelectorAll<SVGGElement>('.mark-part'))part.dataset.phase='queued';draws.push(()=>{void this.marks.draw(svg);});}
         }view.signature=signature;
       }
@@ -92,7 +97,7 @@ export class RadarView {
       movements.push(this.motion.animate(view.body,frames.incoming,'--dur-reorder','--ease-travel'));
       movements.push(this.motion.animate(snapshot,frames.outgoing,'--dur-reorder','--ease-travel').then(()=>snapshot.remove()));
     }
-    await Promise.all(movements);if(version!==this.version)return;for(const draw of draws)draw();
+    await Promise.all(movements);if(version!==this.version)return;document.body.dataset.radarPhase='marking';for(const draw of draws)draw();
   }
   moodLine(radar:Radar,animate=true){
     const word=document.getElementById('mood-label')!,underline=document.getElementById('mood-underline')!,dot=document.getElementById('mood-position')!,mood=radar.mood.label;
@@ -101,6 +106,6 @@ export class RadarView {
     if(animate&&this.score!==undefined&&this.score!==score)void this.motion.animate(dot,[{left:`${(this.score+1)*50}%`},{left:`${left}%`}],'--dur-sheet');this.score=score;
     if(changed){const svg=renderMark(markGeometry('underline',`mood:${mood}`,{width:Math.max(48,word.offsetWidth),height:12}));underline.replaceChildren(svg);if(animate)void this.marks.draw(svg);}
   }
-  finish(){this.motion.finish();this.marks.finish();for(const ghost of this.list.querySelectorAll('.radar-ghost'))ghost.remove();for(const svg of this.list.parentElement!.querySelectorAll<SVGSVGElement>('.mark-svg'))setMarkProgress(svg,1);}
+  finish(){this.motion.finish();this.marks.finish(document.getElementById('radar-panel')!);for(const ghost of this.list.querySelectorAll('.radar-ghost'))ghost.remove();for(const svg of this.list.parentElement!.querySelectorAll<SVGSVGElement>('.mark-svg'))setMarkProgress(svg,1);}
   dispose(){this.motion.dispose();this.marks.dispose();}
 }

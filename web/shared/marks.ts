@@ -192,6 +192,12 @@ export function renderMark(geometry:MarkGeometry):SVGSVGElement{
   }
   return svg;
 }
+/** A producer's curved annotation arrow; the ribbon carries its pressure. */
+export function arrowGeometry(seed:string):MarkGeometry{
+  const rand=random(`arrow:${seed}`),points=[{x:4,y:34},{x:14,y:17},{x:31,y:10},{x:49,y:13},{x:66,y:26},{x:54,y:24},{x:66,y:26},{x:63,y:14}];
+  const widths=points.map((_,index)=>2.2+Math.sin(index/7*Math.PI)*1.6+rand()*.3);
+  return{kind:'underline',width:72,height:40,seedHash:hash(seed).toString(16),ink:'paper',parts:[ribbon('arrow',points,widths,rand)],rotation:0};
+}
 export function createMark(kind:MarkKind,seed:string,options:MarkOptions={}):SVGSVGElement{return renderMark(markGeometry(kind,seed,options));}
 /** The paper copy is never masked. Only the ink copy follows the pigment reveal. */
 export function renderHighlightedLabel(geometry:MarkGeometry,label:string,marks=true):SVGSVGElement{
@@ -224,7 +230,7 @@ export class MarkAnimator {
   private reduced(){return this.media.matches||getComputedStyle(document.documentElement).getPropertyValue('--motion').trim()==='0';}
   private motionChanged=()=>{if(this.reduced())this.finish();};
   private notify(){this.onChange({drawing:this.active.size,waiting:this.pending.length});}
-  draw(svg:SVGSVGElement,only?:readonly string[]):Promise<void>{
+  draw(svg:SVGSVGElement,only?:readonly string[],priority=false):Promise<void>{
     const parts=[...svg.querySelectorAll<SVGGElement>('.mark-part')].filter(part=>!only||only.includes(part.dataset.part!));
     if(this.disposed||this.reduced()){for(const part of parts)this.finalState(part);return Promise.resolve();}
     const promises=parts.map(part=>{
@@ -232,7 +238,7 @@ export class MarkAnimator {
       let resolve!:()=>void;const promise=new Promise<void>(done=>{resolve=done;});
       const job:DrawJob={part,resolve,promise,animations:[]};this.jobs.set(part,job);part.dataset.phase='queued';
       const reveal=part.querySelector<SVGPathElement>('.mark-reveal');if(reveal)reveal.style.strokeDashoffset='1';
-      this.pending.push(job);return promise;
+      if(priority)this.pending.unshift(job);else this.pending.push(job);return promise;
     });
     this.pump();return Promise.all(promises).then(()=>{});
   }
@@ -256,9 +262,10 @@ export class MarkAnimator {
   private complete(job:DrawJob){
     if(!this.active.delete(job))return;this.jobs.delete(job.part);this.finalState(job.part);for(const animation of job.animations)animation.cancel();job.resolve();this.pump();
   }
-  finish(){
-    const jobs=[...this.active,...this.pending];this.active.clear();this.pending=[];this.jobs.clear();
-    for(const job of jobs){this.finalState(job.part);for(const animation of job.animations)animation.cancel();job.resolve();}this.notify();
+  finish(root?:Element){
+    const jobs=[...this.active,...this.pending].filter(job=>!root||root.contains(job.part));
+    this.pending=this.pending.filter(job=>!jobs.includes(job));
+    for(const job of jobs){this.active.delete(job);this.jobs.delete(job.part);this.finalState(job.part);for(const animation of job.animations)animation.cancel();job.resolve();}this.pump();
   }
   dispose(){this.disposed=true;this.finish();this.observer.disconnect();this.media.removeEventListener('change',this.motionChanged);}
 }

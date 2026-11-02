@@ -49,6 +49,6 @@ for(const [foreground,background,label,sizeToken,weight]of [
   status.prepend(icon(pass?'check-circle':'warning-circle',20));item.append(node('strong','',`${ratio.toFixed(2)}:1`),node('span','',label),node('span','',`${size}px${weight>=700?' bold':''} · needs ${threshold}:1`),status);element('contrast-pairs').append(item);
 }
 void document.fonts.ready.then(()=>{
-  const loaded=document.fonts.check('700 30px "Space Grotesk"')&&document.fonts.check('500 15px Inter')&&document.fonts.check('600 22px Caveat');
+  const loaded=document.fonts.check('700 26px "Space Grotesk"')&&document.fonts.check('500 15px Inter')&&document.fonts.check('600 22px Caveat');
   element('font-status').textContent=loaded?'3 local fonts loaded':'Check local font loading';
 });

@@ -27,9 +27,11 @@ export class TwitchApi {
     const result=await this.call<{data:{id:string}[]}>(`clips?broadcaster_id=${encodeURIComponent(broadcasterId)}`,undefined,true,{method:'POST',signal});
     if(!result.data[0]?.id)throw new Error('Twitch did not return a clip ID');return result.data[0].id;
   }
-  async clipUrl(id:string,signal:AbortSignal){
-    const result=await this.call<{data:{url:string}[]}>(`clips?id=${encodeURIComponent(id)}`,undefined,true,{signal});return result.data[0]?.url;
+  async clip(id:string,signal:AbortSignal){
+    const result=await this.call<{data:{url:string;thumbnail_url?:string}[]}>(`clips?id=${encodeURIComponent(id)}`,undefined,true,{signal});
+    const clip=result.data[0];return clip?{url:clip.url,thumbnailUrl:clip.thumbnail_url}:undefined;
   }
+  async clipUrl(id:string,signal:AbortSignal){return(await this.clip(id,signal))?.url;}
   async send(broadcasterId:string, senderId:string, message:string) {
     const result = await this.call<{data:{is_sent:boolean}[]}>('chat/messages',{broadcaster_id:broadcasterId,sender_id:senderId,message});
     if (!result.data[0]?.is_sent) throw new Error('Twitch did not send the chat message (check channel restrictions)');

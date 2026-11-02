@@ -30,7 +30,7 @@ export interface AlertCleared {
 }
 export interface Moment {
   id:string;ts:number;title:string;titleSource:'pending'|'fallback'|'llm';peakRate:number;uniqueChatters:number;baselineRate:number;zScore:number;
-  sim:boolean;clipUrl:string|null;clipStatus:'marker'|'pending'|'ready'|'failed';clipReason:'simulated'|'offline'|'missing_scope'|'not_connected'|'failed'|null;saved:boolean;
+  sim:boolean;clipUrl:string|null;thumbnailUrl?:string;clipStatus:'marker'|'pending'|'ready'|'failed';clipReason:'simulated'|'offline'|'missing_scope'|'not_connected'|'failed'|null;saved:boolean;
 }
 export interface CommandReply {id:string;command:ChatCommand;user:string;text:string;ts:number;sim:boolean;status:'preview'|'sent'|'failed';source:'radar'|'llm'|'fallback';cached:boolean}
 export type ServerEvent = {type:'command_reply';data:CommandReply} | {type:'moment';data:Moment} | {type:'radar';data:RadarState} | {type:'alert';data:TechAlert} | {type:'alert_cleared';data:AlertCleared} | { type: 'chat'; data: ChatMessage } | { type: 'status'; data: Status };
