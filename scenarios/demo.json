@@ -1,0 +1,87 @@
+{
+  "name": "Chat Radar demo",
+  "phases": [
+    {
+      "name": "Next game and hype",
+      "durationSeconds": 30,
+      "rate": 40,
+      "users": 120,
+      "messages": [
+        "W streamer",
+        "PogChamp",
+        "LMAO",
+        "What is the next game?",
+        "Can we play Minecraft next?",
+        "next game when?",
+        "!ping",
+        "!radar"
+      ]
+    },
+    {
+      "name": "Muted audio burst",
+      "durationSeconds": 15,
+      "rate": 80,
+      "users": 100,
+      "messages": [
+        "no audio",
+        "ur muted",
+        "cant hear u",
+        "sin audio",
+        "we cannot hear your mic",
+        "mic is muted",
+        "audio???",
+        "no sound"
+      ]
+    },
+    {
+      "name": "Clip-worthy hype spike",
+      "durationSeconds": 10,
+      "rate": 400,
+      "users": 500,
+      "messages": [
+        "W",
+        "LMAOOO",
+        "CLIP IT",
+        "WHAT A PLAY",
+        "W W W",
+        "PogChamp",
+        "CLIP THAT",
+        "INSANE"
+      ]
+    },
+    {
+      "name": "International chat",
+      "durationSeconds": 25,
+      "rate": 40,
+      "users": 160,
+      "messages": [
+        "¿Cuál es el próximo juego?",
+        "¡Qué buena partida!",
+        "Qual é o próximo jogo?",
+        "Muito bom esse jogo!",
+        "次は何のゲーム？",
+        "すごいプレイ！",
+        "ما هي اللعبة القادمة؟",
+        "يا لها من لقطة رائعة",
+        "what game is next?",
+        "!missed",
+        "!radar"
+      ]
+    },
+    {
+      "name": "Raid-style local flood",
+      "durationSeconds": 15,
+      "rate": 200,
+      "users": 2000,
+      "messages": [
+        "RAID RAID RAID",
+        "WELCOME RAIDERS",
+        "hello from the raid",
+        "new here!",
+        "RAID RAID RAID",
+        "RAID RAID RAID",
+        "!ping"
+      ]
+    }
+  ]
+}

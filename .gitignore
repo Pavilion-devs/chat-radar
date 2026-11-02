@@ -1,0 +1,16 @@
+node_modules/
+dist/
+web/dashboard/client.js
+web/overlay/*.js
+web/shared/*.js
+.env
+.env.*
+!.env.example
+.tokens.json
+.tokens.json.*
+coverage/
+.DS_Store
+*.log
+
+# Runtime stream history
+data/

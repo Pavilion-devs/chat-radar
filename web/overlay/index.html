@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chat Radar · OBS overlay</title><link rel="stylesheet" href="/shared/base.css"><link rel="stylesheet" href="/overlay/style.css"></head>
+<body>
+<aside id="alert-banner" class="alert-banner" role="alert" hidden><span class="banner-icon" aria-hidden="true">!</span><div><span id="alert-source" class="banner-label">CHAT SIGNAL</span><strong id="alert-title"></strong><span id="alert-count"></span></div></aside>
+<section id="radar-panel" class="radar-panel" aria-label="Live chat radar">
+<header class="overlay-header"><span class="radar-mark" aria-hidden="true"></span><span class="overlay-brand">CHAT RADAR</span><span id="source-badge" class="overlay-badge">CONNECTING</span></header>
+<div class="panel-intro"><span class="eyebrow">What chat is saying</span><span>LAST 60s</span></div><ol id="topics" class="topic-list" aria-label="Top chat topics"></ol>
+<div id="empty-radar" class="empty-radar"><span class="listening-orbit" aria-hidden="true"></span><strong>Listening to chat</strong><p>Topics will appear as the conversation builds.</p></div>
+<div id="mood-section" class="overlay-mood" hidden><div><span class="eyebrow">Chat mood</span><strong id="mood-label">Neutral</strong></div><div class="mood-meter" aria-hidden="true"><i id="mood-position"></i></div></div>
+<footer><span><i class="dot"></i> <span id="connection-label">Connecting</span></span><span id="radar-freshness">Waiting for chat</span></footer></section>
+<aside id="moment-toast" class="moment-toast" aria-live="polite" hidden><span class="moment-symbol" aria-hidden="true">✦</span><div><span id="moment-state" class="eyebrow"></span><strong id="moment-title"></strong><span id="moment-detail"></span></div></aside>
+<script type="module" src="/overlay/client.js"></script></body></html>

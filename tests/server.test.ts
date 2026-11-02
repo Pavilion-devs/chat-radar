@@ -1,0 +1,126 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { WebSocket } from 'ws';
+import type { AddressInfo } from 'node:net';
+import { createApp } from '../src/server/app.js';
+import type { CommandServiceOptions } from '../src/server/chat-commands.js';
+import type { HypeServiceOptions } from '../src/server/hype.js';
+import type { RadarOptions } from '../src/server/topic-radar.js';
+import { Pipeline } from '../src/server/pipeline.js';
+import { readConfig } from '../src/config.js';
+import type { TwitchAuth } from '../src/twitch/auth.js';
+const cleanups:(()=>Promise<void>)[]=[];
+afterEach(async()=>{await Promise.all(cleanups.splice(0).map(fn=>fn()));});
+async function fixture(acknowledge?:(text:string)=>Promise<boolean>,radarOptions:RadarOptions={},hypeOptions:HypeServiceOptions={},commandOptions:CommandServiceOptions={}) {
+  const config=readConfig({TWITCH_CLIENT_ID:'test',TWITCH_CLIENT_SECRET:'test',TWITCH_CHANNEL:'viewer'});
+  const auth={exchange:vi.fn(async()=>{})} as unknown as TwitchAuth;
+  const connect=vi.fn(async()=>{});const pipeline=new Pipeline();
+  const runtime=createApp(config,auth,pipeline,connect,acknowledge,radarOptions,hypeOptions,commandOptions);
+  await new Promise<void>(resolve=>runtime.server.listen(0,'127.0.0.1',resolve));
+  const port=(runtime.server.address() as AddressInfo).port;const url=`http://127.0.0.1:${port}`;
+  cleanups.push(()=>new Promise<void>(resolve=>{runtime.close();runtime.server.close(()=>resolve());}));
+  return {...runtime,auth,connect,pipeline,url,port};
+}
+it('serves static pages and streams pipeline events through a real WebSocket immediately',async()=>{
+  const f=await fixture();
+  expect((await fetch(f.url+'/dashboard/')).status).toBe(200);
+  expect((await fetch(f.url+'/dashboard/client.js')).status).toBe(200);
+  expect((await fetch(f.url+'/overlay/')).status).toBe(200);
+  expect((await fetch(f.url+'/overlay/client.js')).status).toBe(200);
+  expect((await fetch(f.url+'/shared/model.js')).status).toBe(200);
+  expect((await fetch(f.url+'/shared/base.css')).status).toBe(200);
+  const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`);
+  const events: {type:string;data:{text?:string}}[]=[];ws.on('message',data=>events.push(JSON.parse(data.toString())));
+  await new Promise<void>((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});
+  const start=performance.now();
+  f.pipeline.ingest({id:'real-fixture',user:{id:'u',login:'viewer',name:'Viewer'},text:'test chat',ts:Date.now(),badges:[],sim:false});
+  await vi.waitFor(()=>expect(events.some(e=>e.type==='chat' && e.data.text==='test chat')).toBe(true));
+  expect(performance.now()-start).toBeLessThan(1000);ws.terminate();
+});
+it('binds OAuth state to a cookie, consumes it once, and rejects forged callbacks',async()=>{
+  const f=await fixture();
+  const login=await fetch(f.url+'/auth/login',{redirect:'manual'});
+  const location=new URL(login.headers.get('location')!);const state=location.searchParams.get('state')!;
+  expect(location.hostname).toBe('id.twitch.tv');expect(location.searchParams.get('scope')).toBe('user:read:chat user:write:chat clips:edit');
+  expect((await fetch(f.url+`/auth/callback?state=${state}&code=test`,{redirect:'manual'})).status).toBe(400);
+  expect(f.auth.exchange).not.toHaveBeenCalled();
+  const second=await fetch(f.url+'/auth/login',{redirect:'manual'});const secondState=new URL(second.headers.get('location')!).searchParams.get('state')!;
+  const cookie=second.headers.get('set-cookie')!.split(';')[0]!;
+  const callback=`${f.url}/auth/callback?state=${secondState}&code=test`;
+  const response=await fetch(callback,{headers:{cookie},redirect:'manual'});
+  expect(response.status).toBe(302);expect(f.auth.exchange).toHaveBeenCalledWith('test');expect(f.connect).toHaveBeenCalledTimes(1);
+  expect((await fetch(callback,{headers:{cookie},redirect:'manual'})).status).toBe(400);
+  expect((await fetch(f.url+'/auth/callback?state=forged&code=test')).status).toBe(400);
+});
+it('rejects WebSocket connections from a foreign browser origin',async()=>{
+  const f=await fixture();const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`,{origin:'https://elsewhere.invalid'});
+  await new Promise<void>((resolve,reject)=>{ws.once('error',()=>resolve());ws.once('open',()=>reject(new Error('Foreign origin accepted')));});
+});
+it('accepts local replay control and broadcasts SIM on/off through the real hub',async()=>{
+  const f=await fixture();
+  const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`);const events:{type:string;data:{sim?:boolean}}[]=[];
+  ws.on('message',data=>events.push(JSON.parse(data.toString())));
+  await new Promise<void>(resolve=>ws.once('open',resolve));
+  const scenario={name:'local check',phases:[{name:'burst',durationSeconds:0.1,rate:20,users:2,messages:['!ping']}]};
+  const run=()=>fetch(f.url+'/sim/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario})});
+  expect((await run()).status).toBe(202);expect((await run()).status).toBe(409);
+  await vi.waitFor(()=>expect(f.simulation.status?.state).toBe('completed'));
+  expect(f.pipeline.buffer.recent()).toHaveLength(2);expect(f.pipeline.buffer.recent().every(m=>m.sim)).toBe(true);
+  expect(events.some(e=>e.type==='status' && e.data.sim===true)).toBe(true);
+  await vi.waitFor(()=>expect(events.filter(e=>e.type==='status').at(-1)?.data.sim).toBe(false));
+  expect(f.auth.exchange).not.toHaveBeenCalled();expect(f.connect).not.toHaveBeenCalled();ws.terminate();
+});
+it('rejects foreign origins, invalid scenarios, and mismatched stop IDs',async()=>{
+  const f=await fixture();
+  const request=(path:string,body:unknown,origin?:string)=>fetch(f.url+path,{method:'POST',headers:{'Content-Type':'application/json',...(origin?{Origin:origin}:{})},body:JSON.stringify(body)});
+  expect((await request('/sim/run',{},'https://attacker.invalid')).status).toBe(403);
+  expect((await request('/sim/run',{scenario:{}})).status).toBe(400);
+  expect((await fetch(f.url+'/sim/run',{method:'POST',body:'plain text'})).status).toBe(415);
+  const scenario={name:'stop test',phases:[{name:'burst',durationSeconds:10,rate:40,users:2,messages:['hi']}]};
+  const result=await (await request('/sim/run',{scenario})).json() as {runId:string};
+  expect((await request('/sim/stop',{runId:'wrong'})).status).toBe(409);
+  expect((await request('/sim/stop',{runId:result.runId})).status).toBe(200);
+  expect(f.simulation.status?.state).toBe('stopped');expect(f.pipeline.status.sim).toBe(false);
+});
+it('restores active alerts on reconnect and clears them only on an explicit JSON action',async()=>{
+  const send=vi.fn(async()=>true);const f=await fixture(send);
+  for(let i=0;i<5;i++) f.pipeline.ingest({id:`alert-${i}`,user:{id:`sim:${i}`,login:`sim_${i}`,name:'Sim'},text:'no audio',ts:Date.now(),badges:[],sim:true});
+  const active=await (await fetch(f.url+'/alerts')).json() as {id:string}[];expect(active).toHaveLength(1);const id=active[0]!.id;
+  const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`);const events:{type:string;data:{id?:string;acknowledgement?:string}}[]=[];
+  ws.on('message',data=>events.push(JSON.parse(data.toString())));
+  await vi.waitFor(()=>expect(events.some(e=>e.type==='alert' && e.data.id===id)).toBe(true));
+  const endpoint=`${f.url}/alerts/${encodeURIComponent(id)}/clear`;
+  expect((await fetch(endpoint,{method:'POST',body:'{}'})).status).toBe(415);
+  expect((await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://elsewhere.invalid'},body:'{}'})).status).toBe(403);
+  expect(f.techAlerts.detector.list()).toHaveLength(1);
+  const cleared=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});expect(cleared.status).toBe(200);
+  await vi.waitFor(()=>expect(events.some(e=>e.type==='alert_cleared' && e.data.acknowledgement==='local_only')).toBe(true));
+  expect(send).not.toHaveBeenCalled();expect(f.techAlerts.detector.list()).toEqual([]);
+  expect((await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status).toBe(404);
+  ws.terminate();
+});
+it('exposes disabled radar without a key and restores a successful snapshot on WebSocket reconnect',async()=>{
+ const disabled=await fixture();expect(await (await fetch(disabled.url+'/radar')).json()).toMatchObject({status:'disabled',topics:[]});
+ const analyze=vi.fn(async()=>({topics:[{label:'Next game',kind:'question',count_estimate:1,examples:['next game?','next game?'],urgency:0.2}],mood:{label:'Curious',score:0.3}}));
+ const f=await fixture(undefined,{client:{analyze}});
+ f.pipeline.ingest({id:'radar-input',user:{id:'v',name:'Viewer',login:'viewer'},text:'next game?',ts:Date.now(),badges:[],sim:false});
+ await f.radar.refresh();expect(await (await fetch(f.url+'/radar')).json()).toMatchObject({status:'ready',topics:[{label:'Next game'}]});
+ const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`);const received:{type:string;data:{status?:string;topics?:{label:string}[]}}[]=[];
+ ws.on('message',data=>received.push(JSON.parse(data.toString())));
+ await vi.waitFor(()=>expect(received.some(e=>e.type==='radar' && e.data.status==='ready' && e.data.topics?.[0]?.label==='Next game')).toBe(true));ws.terminate();
+});
+it('serves saved moments and restores them through WebSocket snapshots',async()=>{
+ const {MomentStore}=await import('../src/server/moments.js');const store=new MomentStore();await store.ready;
+ await store.upsert({id:'saved',ts:Date.now(),title:'Chat Demands A Clip',titleSource:'llm',peakRate:400,uniqueChatters:350,baselineRate:40,zScore:12,sim:true,clipStatus:'marker',clipReason:'simulated',clipUrl:null,saved:true});
+ const f=await fixture(undefined,{}, {store});await f.hype.ready;
+ expect(await(await fetch(f.url+'/moments')).json()).toMatchObject({storageError:false,moments:[{id:'saved',title:'Chat Demands A Clip',saved:true}]});
+ const ws=new WebSocket(`ws://127.0.0.1:${f.port}/ws`);const events:{type:string;data:{id?:string}}[]=[];ws.on('message',data=>events.push(JSON.parse(data.toString())));
+ await vi.waitFor(()=>expect(events.some(e=>e.type==='moment'&&e.data.id==='saved')).toBe(true));ws.terminate();
+});
+it('exposes local previews with validation/cooldowns and cannot turn a preview into a Twitch send',async()=>{
+ const send=vi.fn(async()=>true);const f=await fixture(send);
+ const post=(body:unknown,origin?:string)=>fetch(f.url+'/commands/preview',{method:'POST',headers:{'Content-Type':'application/json',...(origin?{Origin:origin}:{})},body:JSON.stringify(body)});
+ expect((await post({command:'!missed'},'https://foreign.invalid')).status).toBe(403);expect((await post({command:'!unknown'})).status).toBe(400);
+ expect((await fetch(f.url+'/commands/preview',{method:'POST',body:'plain'})).status).toBe(415);
+ const response=await post({command:'!missed',sim:false});expect(response.status).toBe(200);expect(await response.json()).toMatchObject({sim:true,status:'preview',command:'!missed'});
+ expect((await post({command:'!missed'})).status).toBe(429);expect(send).not.toHaveBeenCalled();expect(await(await fetch(f.url+'/commands/replies')).json()).toHaveLength(1);
+});

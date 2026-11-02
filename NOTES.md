@@ -1,0 +1,134 @@
+# Codex build log
+
+## 2026-11-01 — Phase 1 implementation (live acceptance pending)
+
+- Initialized Git on `main`; added strict TypeScript/ESM, Express, ws, Vitest, build/dev/start/sim/demo scripts and ignored secret/token/generated files.
+- Built authorization-code OAuth with cookie-bound single-use state, private atomic token storage, concurrent refresh protection, proactive expiry checks, startup/hourly validation, and bounded Helix requests.
+- Built EventSub welcome/subscription, keepalive watchdog, reconnect backoff, Twitch session migration without duplicate subscriptions, revocation handling, and duplicate suppression.
+- Built normalized ingestion, a capped 15-minute circular buffer, event bus, WebSocket delivery, and a bounded outbound chat queue. `!ping` has per-user/global cooldowns and ignores simulated messages.
+- Followed the user's engine-first decision: `/dashboard` is only a basic message/status viewer; `/overlay` is transparent. Visual design remains Phase 4.
+- Corrected the plan's scope wording: separate accounts using this user-token WebSocket flow do not inherently require cloud-bot scopes. Phase 1 asks only for chat read/write; clips and OpenAI belong to later phases.
+- Kept `sim`/`demo` entry points available with explicit Phase 2 notices rather than building timeline replay early.
+- Validation: `npm run build` and 18 tests passed, including local HTTP/WebSocket integration. npm install audit reported zero vulnerabilities. Live Twitch latency and an actual Twitch `!ping` reply are not verified yet: they require the owner's app credentials and browser authorization.
+- Smoke checks: `sim` prints its Phase 2 notice; `demo` starts the engine and `/health` responds successfully.
+- Created a blank git-ignored `.env` from `.env.example`; no secrets were read aloud, printed, or committed. README includes exact setup and acceptance instructions.
+- Codex handled implementation, injected-client tests, source review, and documentation. No commit created yet. Suggested commit: `feat: build Phase 1 Twitch chat engine`.
+
+## 2026-11-01 — Phase 2: local simulator
+
+- User explicitly authorized proceeding to Phase 2 while postponing Twitch setup. Preserved the unchecked Phase 1 live acceptance item and documented this exception in PLAN.md.
+- Built validated JSON timelines, deterministic template/user cycling, unique local message IDs, configurable rate/speed, bounded scheduling batches, and stop/restart handling in `src/sim/`.
+- Added the 95-second, 10,400-message demo: next-game chatter (40/s), muted-audio reports (80/s), hype spike (400/s), Spanish/Portuguese/Japanese/Arabic chat (40/s), and raid-style flood (200/s).
+- `npm run demo` starts the server plus scenario without loading Twitch tokens. `npm run sim -- --scenario scenarios/demo.json` controls replay in an existing local server. JSON-only loopback control rejects browser origins and conflicting runs.
+- Generated messages are always `sim:true`, enter the shared pipeline/buffer/event bus, and never call Twitch. Existing ping-command suppression is covered by the complete demo test.
+- Added shared connection/simulation status so Twitch reconnect updates preserve SIM status; the minimal viewer shows a SIM badge, active phase, target rate, and labeled messages. Badge clears on completion, cancellation, or local viewer disconnect. Dashboard design remains deferred.
+- Corrected Phase 2's acceptance wording: later detectors do not yet exist. This phase verifies every scenario stage reaches the common pipeline and viewer; detector-specific behavior remains in its own phase.
+- Validation: strict build and all 25 tests passed. Ran the full normal-speed demo against the real server: all 10,400 messages emitted, final SIM=false, Twitch disconnected. Browser inspection confirmed SIM during replay and its disappearance afterward. Also verified standalone CLI replay at 10x speed.
+- No Twitch credentials or OpenAI key needed; `.env` was unchanged. No Phase 3 work started. Suggested commit: `feat: add local scenario simulator and demo playback`.
+
+## 2026-11-01 — Phase 3, tech alerts
+
+- Implemented the first Phase 3 item only, following the user's engine-first direction. Topic radar, hype detection, and recap commands remain unchecked. Extended the documented Twitch deferral into this local detector work; real chat acceptance remains pending.
+- Added pure, injected-clock analysis modules for six problem categories, with curated English/Spanish/Portuguese/Japanese/Arabic phrases, common repeated-letter typos, and healthy/negated-phrase suppression. These are conservative vocabulary rules, not full semantic understanding; no OpenAI calls are needed.
+- Detection uses 30-second receipt-time windows, at least five distinct reporters, and a 10% message-share threshold. Separate real/simulated windows prevent cross-source evidence or acknowledgements. Counts are maintained incrementally, memory is bounded, and samples are capped at three.
+- Added active alert events and reconnect snapshots. Human-only Fixed action clears one category, resets its evidence, and applies a 60-second cooldown. Other categories remain active. Alerts do not expire automatically.
+- Real alert clears queue one thank-you through the existing sender; disconnected/failed sends are reported. Simulated clears never call the sender. Detection itself has no Twitch or moderation capability.
+- Added only a basic alert list, sample text, and Fixed button to the verification viewer; designed dashboard/overlay work remains Phase 4. No `.env` changes.
+- Validation: strict build and all 62 tests pass. Tests cover multilingual matching, healthy phrases, both thresholds, spam/duplicate handling, expiry/capacity, source separation, cooldown/evidence reset, asynchronous acknowledgements/failures, reconnect snapshots, and JSON/origin checks on clearing.
+- Normal-speed real-process demo verification: muted-audio alert arrived 1,819 ms after the first audio report; explicit HTTP clear returned `local_only` and left zero active alerts. No Twitch connection was used. Real Twitch thank-you remains unverified until credentials are configured.
+- Suggested commit: `feat: detect stream tech problems and support human-cleared alerts`.
+
+## 2026-11-01 — Phase 3, topic radar
+
+- Implemented topic radar only; hype and recap commands remain unchecked. Consulted the OpenAI Docs skill and official Responses/Structured Outputs and GPT-4.1 Mini documentation before integrating the request shape.
+- Added a pure 60-second sampler: normalized text deduplication, preserved repetition/distinct-user counts, at most 300 entries / 24,000 text characters, window-spanning selection, and preservation of the most repeated entry. Request data excludes usernames and IDs. Real and simulated result/label history are separate.
+- Added a native-fetch OpenAI adapter with strict JSON schema, `store:false`, no tools, bounded output tokens, and untrusted-chat instructions. Runtime validation enforces topic/kind/count/urgency/mood bounds and two verbatim sample quotes. Token usage logs include only input/output/total counts; upstream bodies, secrets, and chat text are not logged.
+- Added stable topic IDs/labels via kind-aware label/evidence matching, duplicate label merging, and 60/40 count smoothing bounded by current window size. Missing topics disappear on successful updates.
+- Added eight-second scheduling outside ingestion, single-flight requests, a five-second abort deadline, cancellation on shutdown, unchanged-input skipping, empty-window clearing, and last-good snapshots with explicit stale/error status. Reconnect clients receive the latest radar snapshot; `/radar` exposes the same state.
+- Added a basic topic/mood list and last-success/status text to the verification viewer; full dashboard/overlay design remains deferred. Updated `.env.example` and README with `OPENAI_API_KEY` and configurable `OPENAI_MODEL` (default `gpt-4.1-mini`). The user's `.env` was unchanged.
+- Validation: strict build and all 76 tests pass. Covered sample bounds/frequency, output grounding/schema constraints, stable labels/count smoothing, API envelope/refusal/incomplete/error handling, safe usage logging, timeout/non-blocking ingestion, recovery, source separation, cancellation, and HTTP/WebSocket snapshots. The full demo timeline passed through the real adapter with an injected HTTP response.
+- Real-process smoke check: no-key demo completed all 10,400 local messages; `/radar` and its WebSocket snapshot correctly reported disabled, with no fabricated topics. No OpenAI key is configured, so real-model quality, latency, and account access are explicitly pending in PLAN.md. Twitch checks remain deferred.
+- Suggested commit: `feat: add structured OpenAI topic radar with resilient updates`.
+
+## 2026-11-01 — Real OpenAI connection check
+
+- User configured `OPENAI_API_KEY` and `OPENAI_MODEL=gpt-4.1-mini`. Verified only key presence and model name; did not display or modify the key.
+- First real request hit the five-second deadline. A diagnostic request with a longer deadline returned HTTP 429 after about 5.9 seconds; a follow-up safely classified the response's error type as `insufficient_quota`. No real topic output or token usage was obtained. This is an external account quota/access blocker, not a passed model acceptance test.
+- Consulted the official OpenAI API error guide. Added safe classification for quota/credit/spend-limit errors versus temporary rate limiting, without logging error bodies. Quota/authentication failures stop automatic requests until restart. Temporary rate limiting respects Retry-After or uses a 30-second wait.
+- Increased the request deadline to ten seconds so the observed slow error response can be surfaced. Requests remain single-flight, and chat ingestion remains independent. Added tests for quota suppression, safe messages, and rate-limit recovery; strict build and all 78 tests pass.
+- Updated PLAN.md and README with the exact blocker. Real model quality, successful-call latency, token usage, and live Twitch checks remain pending. No billing or account settings were changed.
+
+## 2026-11-02 — Provider-agnostic LLM layer and Anthropic
+
+- User requested Anthropic as the active provider while preserving OpenAI support. Updated the Phase 3 architecture and LLM instructions in PLAN.md / AGENTS.md; no new feature phase was started.
+- Replaced the OpenAI-specific radar client with a generic `StructuredLLMClient.generate(request, signal)` contract, a provider-neutral radar prompt wrapper, shared usage/error types, provider metadata, and a factory. Radar sampling, local validation, stable labels, smoothing, and scheduler remain shared.
+- Moved OpenAI Responses support into `src/llm/openai.ts`; added Anthropic Messages support in `src/llm/anthropic.ts`. Anthropic uses explicit API version 2026-10-21, JSON `output_config.format`, provider-specific key headers, and completion/refusal checks (including newer stop_details refusal metadata).
+- Followed official Anthropic docs for schema limitations: the adapter translates unsupported bounds/patterns to descriptions without mutating the original schema. Full output constraints and evidence grounding remain enforced locally. This avoids sending the OpenAI schema unchanged and receiving Anthropic 400 errors.
+- Unified token accounting and errors. Anthropic cache-read/cache-write input is included in normalized counts and separately reported. Shared quota/auth/configuration suspension and Retry-After handling preserve last-good results. Logs contain only provider and numeric token usage.
+- Added explicit `.env` selection: LLM_PROVIDER (Anthropic default), LLM_MODEL, and the selected provider's API key. Provider-specific model values remain supported when LLM_MODEL is blank. Unknown providers fail at startup; missing Anthropic credentials never fall back to the existing OpenAI key.
+- Updated `.env.example` and README with Anthropic/OpenAI settings and extension instructions. The user's `.env` and credentials were not modified or printed.
+- Validation: strict build and all 96 tests pass. Retained original OpenAI/radar coverage and added Anthropic request/auth/schema translation, unchanged schema validation, token usage, stop/refusal cases, error classification, selection/no-fallback, and simulator-to-radar integration tests.
+- Real-process smoke check: demo completed all 10,400 messages, selected Anthropic, and showed `Set ANTHROPIC_API_KEY to enable topic radar` because the Anthropic key is not yet present. No fallback request was sent to OpenAI. Real Anthropic quality/latency/usage remain pending until the user adds the key.
+- Suggested commit: `refactor: add provider-neutral LLM layer with Anthropic support`.
+
+## 2026-11-02 — Real Anthropic acceptance and latency tuning
+
+- Verified the owner's `.env` selects Anthropic with `claude-sonnet-5` and has its key present. Preserved that model and did not print or modify any credentials.
+- First real structured-output probe passed in 3,918 ms, using 1,179 input + 198 output = 1,377 tokens. Quotes, counts, labels, kinds, urgency, and mood passed application validation.
+- The first full demo exposed a real limitation: only three updates completed before larger requests exceeded the ten-second deadline. The engine preserved last-good state as designed. A larger diagnostic request completed and validated in 14,549 ms (1,615 input / 1,484 output tokens), confirming latency rather than credentials or schema incompatibility.
+- Consulted Anthropic's official effort documentation and measured a comparable low-effort request at 4,127 ms (1,615 input / 372 output tokens). Added an optional provider-neutral effort hint; radar requests use low effort, applied only for documented effort-capable Anthropic families. Legacy/unknown models omit the field; OpenAI wire settings remain unchanged.
+- Made the deadline configurable with LLM_TIMEOUT_MS (30,000 ms default; validated range 1,000–120,000 ms) and kept the eight-second scheduler single-flight. Slow calls skip overlapping ticks and never block chat ingestion. Timeout status is now explicit.
+- Added regression tests for effort-capable/legacy models and deadline validation. Strict build and all 103 tests pass.
+- Final normal-speed real-process demo: all 10,400 local messages completed, 12 successful Anthropic topic/mood updates, zero stale/error updates. Observed stable topic IDs across next-game/Minecraft chatter, audio complaints, hype reactions, and raid welcomes; mood shifted during the audio complaint stage. Token usage was logged. No Twitch connection or simulated Twitch posts were used.
+- Marked selected-provider acceptance complete in PLAN.md. Hype/recap implementation and live Twitch acceptance remain pending. Updated README and `.env.example`; the owner's `.env` remains unchanged.
+- Suggested commit: `fix: tune Anthropic radar effort and request deadlines`.
+
+## 2026-11-02 — Phase 3, hype detection and moments
+
+- Implemented hype only; `!radar` / `!missed` remain unchecked. Added a pure one-second bucket detector with separate real/simulated baselines, 20-second warmup, EWMA means/variances, rate and distinct-chatter z-scores/ratios, minimum crowd size, and 60-second cooldown. Repeated IDs and one-user spam cannot manufacture a moment; long idle gaps reset warmup.
+- Preserved simulator timing at accelerated speeds by publishing replay speed and using logical timeline time for simulated warmup/cooldown. New replay runs reset only simulated analysis. Tests verify one marker at the intended hype stage at 1x and 10x; the 2x audio burst and nearby raid do not add markers.
+- Moments appear immediately, then provider-neutral structured title generation and clip work run independently with cancellation/deadlines. Titles must be 3–6 words; failures keep a safe local fallback. The selected Anthropic provider generated a real title in the running demo (412 input / 25 output tokens logged).
+- Added serialized atomic JSON persistence in `data/moments.json`, latest-1,000 retention, saved/unsaved state, corruption preservation, and restart restoration. Runtime history is ignored by Git. `GET /moments` and WebSocket reconnect snapshots expose the history; the basic viewer shows title, detection metrics, source, save state, and verified clip links. Designed UI/toasts remain Phase 4.
+- Added a Twitch clip helper: verify scope and live state, create once using POST query parameters, poll for up to 15 seconds, and accept only a verified Twitch HTTPS clip URL. Offline/disconnected/missing-scope states remain markers; failed/ambiguous creation is not retried. Shutdown cancellation prevents a POST after a cancelled live-state check. Simulated moments never invoke any Twitch method, even while a real channel is connected.
+- New OAuth authorizations request `clips:edit`; existing chat-only tokens still validate for chat and can be reauthorized later. LLM titles label local moments; Twitch retains its API-generated clip title. Documented both decisions and the pending real-live-clip acceptance in PLAN.md / README.
+- Validation: strict build and all 120 tests pass, covering thresholds/cooldowns, full scenario timing, source isolation, async failure/timeout handling, title constraints, persistence/concurrent updates/corrupt storage, HTTP/WebSocket history, clip scopes/offline/polling/URL validation/cancellation, POST behavior, and legacy token compatibility.
+- Real-process acceptance: accelerated demo completed all 10,400 local messages and produced one saved simulated moment (405 messages/s, 405 distinct chatters in the detection bucket), with an Anthropic-generated title and no clip URL. Verified the on-disk title, restarted the server, and verified the same saved moment was restored. No Twitch credentials, fake chat posts, or real clip creation were used for this check.
+- No new `.env` values required; secrets were unchanged and never printed. Live Twitch clip verification remains pending until setup/live testing. Suggested commit: `feat: detect hype spikes and persist titled moments with clip support`.
+
+## 2026-11-02 — Phase 3, !radar and !missed
+
+- Added `!radar` from the latest source-specific top three topics and mood, with warmup/stale wording and no model call. Added `!missed` using the selected provider with structured output, untrusted-context instructions, runtime validation, and a 450-character whole-reply limit including the requester mention.
+- Added bounded in-memory radar history and a ten-minute recap context: up to 20 representative successful radar frames, 10 matching-source moments, and 80 deduplicated message entries / 16,000 text characters. Commands and recognized prior bot replies are excluded from both radar input and recap samples to prevent feedback. Rolling radar counts are not summed across overlapping frames.
+- Added 60-second per-user and 10-second global cooldowns per command/source, a 20-second body-only cache, fresh mentions for each requester, and shared in-flight generation. Real and simulated caches/history/cooldowns are isolated. New replay runs cancel stale simulated work and reset command state.
+- Timeouts, refusals, invalid output, and missing keys use known topic/moment labels or an honest no-data message. Replies are cleaned to one line, and provider errors are never sent to chat. Existing Twitch rate limiting remains the outbound path; ambiguous sends are not retried.
+- Simulated commands always produce local-only `command_reply` events, including when Twitch is connected. Added bounded reply history / reconnect snapshots, JSON-only same-origin `/commands/preview`, `/commands/replies`, and minimal local-preview buttons. Attempts to request real sending through the preview route are ignored. Added automatic `!radar` / `!missed` requests to the scenario without changing its rates, durations, or 10,400 total messages.
+- Validation: strict build and all 135 tests pass. New tests cover mentions, top-three limits, cooldowns, cache TTL and identity isolation, single-flight generation, length/Unicode limits, cancellation, source separation, old/future evidence, malformed output, no-data fallback, real-send failures, preview-route protection, and both commands in the full simulator.
+- Found and fixed a timing assumption in the existing WebSocket SIM-status test: server completion can precede client receipt of the final frame, so the assertion now waits for that frame. An initial real cache probe occurred after the 20-second cache expired and correctly regenerated; verified timed cache reuse with the normal-speed scenario instead.
+- Real-process normal-speed acceptance: all 10,400 messages completed; observed four non-warmup radar replies, three Anthropic-generated recap replies (two from cache), correct user mentions, all replies within 450 characters, and all statuses local preview. The first recap was 325 characters; cached replies differed only in requester mention length. Real Twitch sending was not used.
+- Updated PLAN.md / README and marked command implementation complete. Phase 3 live Twitch/clip/command acceptance remains unchecked; no Phase 4 work started. No new environment variables or secret changes. Suggested commit: `feat: add cached recaps and radar chat commands with local previews`.
+
+## 2026-11-02 — Real Twitch acceptance setup (authorization pending)
+
+- User supplied broadcaster login `olaboye7`; configured `TWITCH_CHANNEL` in the ignored `.env` without displaying credentials. Existing client settings and LLM settings were preserved.
+- Restarted in real-chat mode, confirmed SIM is false, and opened the normal Twitch sign-in/authorization flow requesting chat read, chat write, and clip creation. No saved OAuth tokens were present; the account owner must sign in and approve access.
+- Live message latency, command replies, and live clips remain unverified; acceptance boxes stay unchecked. No simulated messages were sent to Twitch.
+- Validation: strict build and all 135 tests passed again after configuration. No phase was marked complete.
+
+## 2026-11-02 — Phase 1 and real command acceptance complete
+
+- Owner completed Twitch OAuth for `olaboye7`; validated chat read, chat write, and clips scopes without printing tokens. `.tokens.json` is mode 0600; both secret files are git-ignored. Real EventSub connection reports connected, SIM=false.
+- Typed one clearly labeled connection-test message in the actual Twitch chat UI. The existing dashboard rendered it with a timestamp age of 16 ms; an independent local WebSocket observer saw 15 ms. Later Twitch timestamps were roughly 100–200 ms ahead of the local clock, so these are application timestamp observations, not a calibrated latency benchmark.
+- Typed `!ping` and observed the real `@olaboye7 pong!` reply. Phase 1 Done when is met and its live acceptance checkbox is checked.
+- Typed `!radar` and `!missed` in Twitch; verified returned messages in both Twitch UI and EventSub, with correct mentions, sent status, 73/207 character lengths, and a real Anthropic recap. Repeated uppercase forms arrived within the per-viewer cooldown and produced no additional replies. Shared multi-user cooldown/cache cases remain automated-test coverage.
+- No simulator messages or extra accounts were used. No code changes were needed for live chat acceptance. Twitch reports the channel offline, so no clip was created and Phase 3 live clip acceptance remains unchecked. Dashboard design remains deferred.
+- Validation after live acceptance: strict build and all 135 tests passed. Suggested commit: `test: verify Twitch ingestion and live chat commands`.
+
+## 2026-11-02 — Real broadcast and playable clip verification
+
+- User explicitly requested that Codex start a stream and verify a real clip. OBS was not installed; the existing Homebrew FFmpeg was available. Prepared a silent 1280×720 Chat Radar test card without capturing the desktop, microphone, or camera.
+- Confirmed clips were already enabled without changing channel settings. Retrieved the broadcaster’s stream key through the normal Twitch dashboard UI, kept it private in the ignored `.env` for the short test, and hid it again in Twitch. No key was printed or logged.
+- Broadcast the card over Twitch’s official secure RTMPS ingest endpoint, with TLS certificate validation, H.264 video, AAC silence, and a five-minute automatic stop limit. Twitch’s public channel showed the actual test card live.
+- Called the production `TwitchClipper.create` helper once while live, with the existing `clips:edit` authorization. Twitch returned a real 30-second clip: https://www.twitch.tv/olaboye7/clip/EphemeralExcitedGoldfishBlargNaut-L3y6n3ANwK6jfWCT. Observed decoded 640×360 video, readyState 4, no playback error, currentTime progressing from 10.10 seconds to the full 30.008 seconds.
+- Stopped the broadcaster after roughly 91 seconds and confirmed Twitch reports the channel offline. Removed the temporary stream key from `.env`; existing Twitch app credentials, OAuth tokens, and LLM settings were preserved. Saved only public clip metadata in ignored `data/clip-verification.json`.
+- Split live clip acceptance into an honestly completed manual Clips API check and a still-pending genuine-chat spike check. No fake chat, extra accounts, forged hype events, or simulated Twitch posts were used. No engine code changes were needed; Phase 4 has not started.
+- Final validation: strict build and all 135 tests passed. Suggested commit: `docs: record verified Twitch broadcast and real clip playback`.
